@@ -83,7 +83,7 @@ const ProductsPage = () => {
               <h3 className="font-semibold text-sm mb-1">{product.name}</h3>
               <p className="text-xs text-foreground mb-3 line-clamp-2">{product.description}</p>
               <div className="flex items-center gap-1 mb-3">
-                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                <Star className="h-3 w-3 fill-current text-primary" />
                 <span className="text-xs text-foreground tabular-nums">{product.rating}</span>
               </div>
               <div className="flex items-center justify-between">
