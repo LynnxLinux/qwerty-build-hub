@@ -41,8 +41,8 @@ const HomePage = () => (
           className="max-w-2xl"
         >
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-none mb-6">
-            Build Your<br />
-            <span className="text-gradient-primary">Endgame.</span>
+            Monte o seu teclado<br />
+            <span className="text-gradient-primary">Perfeito.</span>
           </h1>
           <p className="text-lg text-foreground max-w-lg mb-8">
             Design and build your dream mechanical keyboard with our interactive builder. Choose every component, preview in real-time, and order with one click.
