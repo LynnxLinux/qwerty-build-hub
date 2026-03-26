@@ -6,16 +6,16 @@ import heroImage from "@/assets/hero-keyboard.jpg";
 const spring = { type: "spring" as const, stiffness: 300, damping: 25, mass: 0.5 };
 
 const featuredBuilds = [
-  { title: "Midnight Purple", layout: "65%", price: "$287.49", emoji: "🟣" },
-  { title: "Arctic White", layout: "TKL", price: "$312.99", emoji: "⚪" },
-  { title: "Neon Dreams", layout: "75%", price: "$259.99", emoji: "🌈" },
+  { title: "Midnight Purple", layout: "65%", price: "R$287.49", emoji: "🟣" },
+  { title: "Arctic White", layout: "TKL", price: "R$312.99", emoji: "⚪" },
+  { title: "Neon Dreams", layout: "75%", price: "R$259.99", emoji: "🌈" },
 ];
 
 const popularProducts = [
-  { name: "Gateron Oil King", price: "$32.99", category: "Switches", emoji: "🔴" },
-  { name: "GMK Laser Keycaps", price: "$129.99", category: "Keycaps", emoji: "🎨" },
-  { name: "Coiled USB-C Cable", price: "$49.99", category: "Cables", emoji: "🔌" },
-  { name: "Tofu65 Case", price: "$119.99", category: "Cases", emoji: "🔲" },
+  { name: "Gateron Oil King", price: "R$32.99", category: "Switches", emoji: "🔴" },
+  { name: "GMK Laser Keycaps", price: "R$129.99", category: "Keycaps", emoji: "🎨" },
+  { name: "Coiled USB-C Cable", price: "R$49.99", category: "Cables", emoji: "🔌" },
+  { name: "Tofu65 Case", price: "R$119.99", category: "Cases", emoji: "🔲" },
 ];
 
 const reasons = [
@@ -45,7 +45,7 @@ const HomePage = () => (
             <span className="text-gradient-primary">Perfeito.</span>
           </h1>
           <p className="text-lg text-foreground max-w-lg mb-8">
-            Design and build your dream mechanical keyboard with our interactive builder. Choose every component, preview in real-time, and order with one click.
+            Projete e construa o teclado mecânico dos seus sonhos com nosso construtor interativo. Escolha cada componente, visualize em tempo real e faça o pedido com um clique.
           </p>
           <div className="flex gap-4 flex-wrap">
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} transition={spring}>
@@ -53,7 +53,7 @@ const HomePage = () => (
                 to="/builder"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button transition-colors hover:bg-primary/90"
               >
-                Start Building <ArrowRight className="h-4 w-4" />
+                Comece a Customizar <ArrowRight className="h-4 w-4" />
               </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} transition={spring}>
@@ -61,7 +61,7 @@ const HomePage = () => (
                 to="/products"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-foreground-strong font-semibold rounded-md border border-border transition-colors hover:bg-accent/80"
               >
-                Browse Parts
+                Procure peças
               </Link>
             </motion.div>
           </div>
