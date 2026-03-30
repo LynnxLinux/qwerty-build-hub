@@ -2,21 +2,21 @@ import { motion } from "framer-motion";
 import { Keyboard, Heart, Zap, Globe } from "lucide-react";
 
 const values = [
-  { icon: Keyboard, title: "Craft", desc: "Every keyboard is a unique expression of its creator." },
-  { icon: Heart, title: "Passion", desc: "Built by enthusiasts, for enthusiasts." },
-  { icon: Zap, title: "Innovation", desc: "Pushing the boundaries of keyboard technology." },
-  { icon: Globe, title: "Community", desc: "A global network of keyboard lovers." },
+  { icon: Keyboard, title: "Construção", desc: "Cada teclado é uma expressão única de seu criador." },
+  { icon: Heart, title: "Paixão", desc: "Construído por entusiastas, para entusiastas." },
+  { icon: Zap, title: "Inovação", desc: "Expandindo os limites da tecnologia de teclados." },
+  { icon: Globe, title: "Comunidade", desc: "Uma rede global de amantes de teclados." },
 ];
 
 const AboutPage = () => (
   <div className="container mx-auto px-4 py-12">
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mb-16">
       <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-        Helping You Build Your<br />
-        <span className="text-gradient-primary">Dream Keyboard</span>
+        Ajudando você a construir seu<br />
+        <span className="text-gradient-primary">Teclado dos Sonhos</span>
       </h1>
       <p className="text-lg text-foreground leading-relaxed">
-        Qwerty was founded with a simple mission: make the complex process of custom keyboard building accessible, visual, and satisfying for everyone — from first-timers to seasoned enthusiasts.
+        A Qwerty foi fundada com uma missão simples: tornar o complexo processo de criação de teclados personalizados acessível, visual e satisfatório para todos desde iniciantes até entusiastas experientes.
       </p>
     </motion.div>
 
@@ -40,9 +40,9 @@ const AboutPage = () => (
     </div>
 
     <div className="glass rounded-lg p-12 text-center max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold tracking-tight mb-4">Our Story</h2>
+      <h2 className="text-2xl font-bold tracking-tight mb-4">Nossa História</h2>
       <p className="text-foreground leading-relaxed">
-        What started as a side project by a group of keyboard enthusiasts has grown into a platform used by thousands of builders worldwide. We believe that the perfect keyboard isn't something you buy — it's something you create. Every switch, every keycap, every detail matters. That's why we built Qwerty: to give you the tools to make it yours.
+        O que começou como um projeto paralelo de um grupo de entusiastas de teclados cresceu e se tornou uma plataforma usada por milhares de criadores ao redor do mundo. Acreditamos que o teclado perfeito não é algo que você compra é algo que você cria. Cada switch, cada keycap, cada detalhe importa. É por isso que construímos a Qwerty: para dar a você as ferramentas para torná-lo seu.
       </p>
     </div>
   </div>

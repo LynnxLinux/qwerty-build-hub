@@ -10,10 +10,10 @@ const CartPage = () => {
     return (
       <div className="container mx-auto px-4 py-32 text-center">
         <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Your Cart is Empty</h1>
-        <p className="text-foreground mb-8">Start building your dream keyboard.</p>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Seu carrinho está vazio</h1>
+        <p className="text-foreground mb-8">Que tal montar o teclado dos seus sonhos?</p>
         <Link to="/products" className="inline-flex px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button">
-          Browse Products
+          Ver produtos
         </Link>
       </div>
     );
@@ -22,7 +22,7 @@ const CartPage = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-4xl font-bold tracking-tight mb-8">Shopping Cart</h1>
+        <h1 className="text-4xl font-bold tracking-tight mb-8">Carrinho</h1>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -41,7 +41,7 @@ const CartPage = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm truncate">{item.name}</h3>
-                <p className="text-primary font-semibold text-sm tabular-nums">${item.price.toFixed(2)}</p>
+                <p className="text-primary font-semibold text-sm tabular-nums">R${item.price.toFixed(2)}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-1 rounded bg-accent hover:bg-accent/80 text-foreground-strong">
@@ -53,7 +53,7 @@ const CartPage = () => {
                 </button>
               </div>
               <p className="text-sm font-semibold text-foreground-strong tabular-nums w-20 text-right">
-                ${(item.price * item.quantity).toFixed(2)}
+                R${(item.price * item.quantity).toFixed(2)}
               </p>
               <button onClick={() => removeItem(item.id)} className="p-2 text-destructive hover:bg-destructive/10 rounded transition-colors">
                 <Trash2 className="h-4 w-4" />
@@ -63,19 +63,19 @@ const CartPage = () => {
         </div>
 
         <div className="bg-card rounded-lg shadow-card p-6 h-fit sticky top-24">
-          <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
+          <h3 className="font-semibold text-lg mb-4">Resumo do pedido</h3>
           <div className="space-y-2 text-sm mb-6">
             <div className="flex justify-between text-foreground">
-              <span>Items ({totalItems})</span>
-              <span className="tabular-nums">${totalPrice.toFixed(2)}</span>
+              <span>Itens ({totalItems})</span>
+              <span className="tabular-nums">R${totalPrice.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-foreground">
-              <span>Shipping</span>
-              <span>Free</span>
+              <span>Frete</span>
+              <span>Grátis</span>
             </div>
             <div className="border-t border-border pt-2 flex justify-between text-foreground-strong font-semibold">
               <span>Total</span>
-              <span className="tabular-nums">${totalPrice.toFixed(2)}</span>
+              <span className="tabular-nums">R${totalPrice.toFixed(2)}</span>
             </div>
           </div>
           <motion.button
@@ -83,7 +83,7 @@ const CartPage = () => {
             whileTap={{ scale: 0.98 }}
             className="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button"
           >
-            Checkout
+            Finalizar compra
           </motion.button>
         </div>
       </div>

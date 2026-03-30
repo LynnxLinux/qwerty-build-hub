@@ -6,31 +6,30 @@ import heroImage from "@/assets/hero-keyboard.jpg";
 const spring = { type: "spring" as const, stiffness: 300, damping: 25, mass: 0.5 };
 
 const featuredBuilds = [
-  { title: "Midnight Purple", layout: "65%", price: "R$287.49", emoji: "🟣" },
-  { title: "Arctic White", layout: "TKL", price: "R$312.99", emoji: "⚪" },
-  { title: "Neon Dreams", layout: "75%", price: "R$259.99", emoji: "🌈" },
+  { title: "Midnight Purple", layout: "65%", price: "R$287,49", emoji: "🟣" },
+  { title: "Arctic White", layout: "TKL", price: "R$312,99", emoji: "⚪" },
+  { title: "Neon Dreams", layout: "75%", price: "R$259,99", emoji: "🌈" },
 ];
 
 const popularProducts = [
-  { name: "Gateron Oil King", price: "R$32.99", category: "Switches", emoji: "🔴" },
-  { name: "GMK Laser Keycaps", price: "R$129.99", category: "Keycaps", emoji: "🎨" },
-  { name: "Coiled USB-C Cable", price: "R$49.99", category: "Cables", emoji: "🔌" },
-  { name: "Tofu65 Case", price: "R$119.99", category: "Cases", emoji: "🔲" },
+  { name: "Gateron Oil King", price: "R$32,99", category: "Switches", emoji: "🔴" },
+  { name: "GMK Laser Keycaps", price: "R$129,99", category: "Keycaps", emoji: "🎨" },
+  { name: "Coiled USB-C Cable", price: "R$49,99", category: "Cabos", emoji: "🔌" },
+  { name: "Tofu65 Case", price: "R$119,99", category: "Cases", emoji: "🔲" },
 ];
 
 const reasons = [
-  { icon: Palette, title: "Full Customization", desc: "Choose every component from layout to keycaps." },
-  { icon: Zap, title: "Live Preview", desc: "See your keyboard update in real-time as you build." },
-  { icon: Shield, title: "Quality Parts", desc: "Only premium switches, cases, and keycaps." },
-  { icon: Users, title: "Community", desc: "Share builds and get inspired by others." },
+  { icon: Palette, title: "Personalização completa", desc: "Escolha cada componente, do layout às keycaps." },
+  { icon: Zap, title: "Visualização em tempo real", desc: "Veja seu teclado sendo montado enquanto escolhe." },
+  { icon: Shield, title: "Peças de qualidade", desc: "Utilizamos apenas componentes confiáveis e duráveis." },
+  { icon: Users, title: "Comunidade ativa", desc: "Compartilhe setups e descubra novas ideias." },
 ];
 
 const HomePage = () => (
   <div>
-    {/* Hero */}
     <section className="relative overflow-hidden">
       <div className="absolute inset-0">
-        <img src={heroImage} alt="Custom mechanical keyboard" className="w-full h-full object-cover opacity-40" />
+        <img src={heroImage} alt="Teclado mecânico personalizado" className="w-full h-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
       </div>
       <div className="relative container mx-auto px-4 py-32 md:py-44">
@@ -42,10 +41,10 @@ const HomePage = () => (
         >
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-none mb-6">
             Monte o seu teclado<br />
-            <span className="text-gradient-primary">Perfeito.</span>
+            <span className="text-gradient-primary">ideal</span>
           </h1>
           <p className="text-lg text-foreground max-w-lg mb-8">
-            Projete e construa o teclado mecânico dos seus sonhos com nosso construtor interativo. Escolha cada componente, visualize em tempo real e faça o pedido com um clique.
+            Crie seu teclado mecânico personalizado com nosso construtor interativo. Escolha cada peça, visualize na hora e finalize sua compra com facilidade.
           </p>
           <div className="flex gap-4 flex-wrap">
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} transition={spring}>
@@ -53,7 +52,7 @@ const HomePage = () => (
                 to="/builder"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button transition-colors hover:bg-primary/90"
               >
-                Comece a Customizar <ArrowRight className="h-4 w-4" />
+                Montar meu teclado <ArrowRight className="h-4 w-4" />
               </Link>
             </motion.div>
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} transition={spring}>
@@ -61,7 +60,7 @@ const HomePage = () => (
                 to="/products"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-foreground-strong font-semibold rounded-md border border-border transition-colors hover:bg-accent/80"
               >
-                Procure peças
+                Ver produtos
               </Link>
             </motion.div>
           </div>
@@ -69,10 +68,9 @@ const HomePage = () => (
       </div>
     </section>
 
-    {/* Featured Builds */}
     <section className="container mx-auto px-4 py-24">
-      <h2 className="text-3xl font-bold tracking-tight mb-2">Featured Builds</h2>
-      <p className="text-foreground mb-10">Handpicked custom keyboards from our community.</p>
+      <h2 className="text-3xl font-bold tracking-tight mb-2">Teclados em destaque</h2>
+      <p className="text-foreground mb-10">Modelos montados por nossa comunidade.</p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {featuredBuilds.map((build, i) => (
           <motion.div
@@ -99,10 +97,9 @@ const HomePage = () => (
       </div>
     </section>
 
-    {/* Popular Products */}
     <section className="container mx-auto px-4 py-24">
-      <h2 className="text-3xl font-bold tracking-tight mb-2">Popular Products</h2>
-      <p className="text-foreground mb-10">Top-rated parts loved by the community.</p>
+      <h2 className="text-3xl font-bold tracking-tight mb-2">Produtos mais vendidos</h2>
+      <p className="text-foreground mb-10">Peças mais populares entre nossos clientes.</p>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {popularProducts.map((p, i) => (
           <motion.div
@@ -122,10 +119,9 @@ const HomePage = () => (
       </div>
     </section>
 
-    {/* Why Qwerty */}
     <section className="container mx-auto px-4 py-24">
-      <h2 className="text-3xl font-bold tracking-tight text-center mb-2">Why Choose Qwerty</h2>
-      <p className="text-foreground text-center mb-12">Everything you need to build your perfect keyboard.</p>
+      <h2 className="text-3xl font-bold tracking-tight text-center mb-2">Por que escolher o Qwerty?</h2>
+      <p className="text-foreground text-center mb-12">Tudo o que você precisa para montar seu teclado ideal.</p>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {reasons.map((r, i) => (
           <motion.div
@@ -146,16 +142,15 @@ const HomePage = () => (
       </div>
     </section>
 
-    {/* Community CTA */}
     <section className="container mx-auto px-4 py-24">
       <div className="glass rounded-lg p-12 text-center">
-        <h2 className="text-3xl font-bold tracking-tight mb-4">Join the Community</h2>
+        <h2 className="text-3xl font-bold tracking-tight mb-4">Faça parte da comunidade</h2>
         <p className="text-foreground max-w-md mx-auto mb-8">
-          Share your builds, get feedback, and discover inspiration from keyboard enthusiasts worldwide.
+          Compartilhe seus setups, receba feedback e encontre inspiração.
         </p>
         <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} transition={spring} className="inline-block">
           <Link to="/community" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button">
-            Explore Builds <ArrowRight className="h-4 w-4" />
+            Ver projetos <ArrowRight className="h-4 w-4" />
           </Link>
         </motion.div>
       </div>

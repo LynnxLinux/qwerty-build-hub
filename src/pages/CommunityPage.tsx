@@ -15,8 +15,8 @@ const CommunityPage = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-4xl font-bold tracking-tight mb-2">Community Gallery</h1>
-        <p className="text-foreground mb-10">Explore custom keyboards built by our community.</p>
+        <h1 className="text-4xl font-bold tracking-tight mb-2">Galeria da Comunidade</h1>
+        <p className="text-foreground mb-10">Veja teclados personalizados criados pela comunidade.</p>
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -37,7 +37,7 @@ const CommunityPage = () => {
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <h3 className="font-semibold">{build.title}</h3>
-                  <p className="text-xs text-muted-foreground">by {build.user}</p>
+                  <p className="text-xs text-muted-foreground">por {build.user}</p>
                 </div>
                 <button
                   onClick={() => handleLike(build.id)}
