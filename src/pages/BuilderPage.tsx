@@ -20,7 +20,7 @@ const categoryOrder: ComponentCategory[] = ["switch", "keycap", "pcb", "case"];
 /* ── Compatibility badge ───────────────────────────────────── */
 const CompatBadge = ({ compatible }: { compatible: boolean }) =>
   compatible ? (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400">
+    <span className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "hsl(160, 60%, 50%)" }}>
       <CheckCircle2 className="h-3 w-3" /> Compatível
     </span>
   ) : (
