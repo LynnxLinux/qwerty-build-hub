@@ -2,16 +2,41 @@ export type ComponentCategory = "switch" | "keycap" | "pcb" | "case";
 export type SwitchType = "MX" | "Low Profile" | "Optical";
 export type LayoutSize = "60%" | "65%" | "75%" | "TKL" | "Full";
 
+export interface CaseColor {
+  id: string;
+  name: string;
+  hex: string;
+}
+
 export interface BuilderProduct {
   id: string;
   name: string;
   category: ComponentCategory;
   type: SwitchType;
-  layout: LayoutSize | null; // switches don't have layouts
+  layout: LayoutSize | null;
   price: number;
   image: string;
   description: string;
+  /** Only for cases */
+  supportedLayouts?: LayoutSize[];
+  colors?: CaseColor[];
 }
+
+const standardColors: CaseColor[] = [
+  { id: "black", name: "Preto", hex: "#1a1a1a" },
+  { id: "silver", name: "Prata", hex: "#a0a0a0" },
+  { id: "white", name: "Branco", hex: "#e8e8e8" },
+  { id: "navy", name: "Azul Marinho", hex: "#1e3a5f" },
+  { id: "burgundy", name: "Bordô", hex: "#6b1d1d" },
+];
+
+const slimColors: CaseColor[] = [
+  { id: "white", name: "Branco", hex: "#e8e8e8" },
+  { id: "silver", name: "Prata", hex: "#c0c0c0" },
+  { id: "space-gray", name: "Cinza Espacial", hex: "#4a4a4a" },
+  { id: "rose", name: "Rosé", hex: "#b76e79" },
+  { id: "midnight", name: "Meia-noite", hex: "#1c1c2e" },
+];
 
 export const builderProducts: BuilderProduct[] = [
   // Switches
@@ -35,10 +60,10 @@ export const builderProducts: BuilderProduct[] = [
   { id: "pcb-mx-tkl", name: "Keychron Q3 PCB", category: "pcb", type: "MX", layout: "TKL", price: 80.00, image: "🔧", description: "MX hot-swap PCB for TKL builds." },
   { id: "pcb-lp-75", name: "Nuphy Air75 PCB", category: "pcb", type: "Low Profile", layout: "75%", price: 60.00, image: "🔧", description: "Low profile hot-swap PCB, 75% layout." },
 
-  // Cases
-  { id: "cs-60-alu", name: "Tofu60 Aluminum Case", category: "case", type: "MX", layout: "60%", price: 99.99, image: "🔲", description: "CNC aluminum case for 60% PCBs." },
-  { id: "cs-65-alu", name: "Tofu65 Aluminum Case", category: "case", type: "MX", layout: "65%", price: 119.99, image: "🔲", description: "CNC aluminum case for 65% PCBs." },
-  { id: "cs-75-alu", name: "GMMK Pro Case (75%)", category: "case", type: "MX", layout: "75%", price: 139.99, image: "🔲", description: "Gasket-mount aluminum case for 75% PCBs." },
-  { id: "cs-tkl-poly", name: "Bakeneko TKL Case", category: "case", type: "MX", layout: "TKL", price: 89.99, image: "📦", description: "O-ring gasket mount case for TKL PCBs." },
-  { id: "cs-lp-75", name: "Nuphy Air75 Case", category: "case", type: "Low Profile", layout: "75%", price: 69.99, image: "📦", description: "Slim case for low profile 75% PCBs." },
+  // Cases — now with supportedLayouts and colors
+  { id: "cs-60-alu", name: "Tofu60 Aluminum Case", category: "case", type: "MX", layout: "60%", price: 99.99, image: "🔲", description: "CNC aluminum case for 60% PCBs.", supportedLayouts: ["60%"], colors: standardColors },
+  { id: "cs-65-alu", name: "Tofu65 Aluminum Case", category: "case", type: "MX", layout: "65%", price: 119.99, image: "🔲", description: "CNC aluminum case for 65% PCBs.", supportedLayouts: ["65%"], colors: standardColors },
+  { id: "cs-75-alu", name: "GMMK Pro Case (75%)", category: "case", type: "MX", layout: "75%", price: 139.99, image: "🔲", description: "Gasket-mount aluminum case for 75% PCBs.", supportedLayouts: ["75%"], colors: standardColors },
+  { id: "cs-tkl-poly", name: "Bakeneko TKL Case", category: "case", type: "MX", layout: "TKL", price: 89.99, image: "📦", description: "O-ring gasket mount case for TKL PCBs.", supportedLayouts: ["TKL"], colors: standardColors },
+  { id: "cs-lp-75", name: "Nuphy Air75 Case", category: "case", type: "Low Profile", layout: "75%", price: 69.99, image: "📦", description: "Slim case for low profile 75% PCBs.", supportedLayouts: ["75%"], colors: slimColors },
 ];

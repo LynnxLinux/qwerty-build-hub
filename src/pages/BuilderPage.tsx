@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { AlertTriangle, ShoppingCart, RotateCcw } from "lucide-react";
-import type { BuilderProduct, ComponentCategory } from "@/data/builderProducts";
+import type { BuilderProduct, ComponentCategory, LayoutSize } from "@/data/builderProducts";
 import { validateBuild, type BuildSelection, type CompatibilityError } from "@/utils/compatibilidade";
 
 import KeyboardPreview from "@/components/builder/KeyboardPreview";
+import LayoutSelector from "@/components/builder/LayoutSelector";
 import CategoryCard from "@/components/builder/CategoryCard";
 import ProductModal from "@/components/builder/ProductModal";
+import ColorPicker from "@/components/builder/ColorPicker";
 
 const categoryOrder: (ComponentCategory | "extras")[] = ["case", "switch", "keycap", "pcb", "extras"];
 
@@ -32,10 +34,19 @@ const BuildAlert = ({ error }: { error: CompatibilityError }) => (
 /* ── Main page ─────────────────────────────────────────────── */
 const BuilderPage = () => {
   const { addItem } = useCart();
+
+  // Layout state (independent)
+  const [selectedLayout, setSelectedLayout] = useState<LayoutSize>("65%");
+
+  // Component states
   const [selectedSwitch, setSelectedSwitch] = useState<BuilderProduct | null>(null);
   const [selectedKeycap, setSelectedKeycap] = useState<BuilderProduct | null>(null);
   const [selectedPcb, setSelectedPcb] = useState<BuilderProduct | null>(null);
   const [selectedCase, setSelectedCase] = useState<BuilderProduct | null>(null);
+
+  // Case color state
+  const [selectedCaseColorId, setSelectedCaseColorId] = useState<string | null>(null);
+
   const [openCategory, setOpenCategory] = useState<ComponentCategory | "extras" | null>(null);
 
   const selection: BuildSelection = useMemo(
@@ -43,7 +54,26 @@ const BuilderPage = () => {
     [selectedSwitch, selectedKeycap, selectedPcb, selectedCase],
   );
 
-  const errors = useMemo(() => validateBuild(selection), [selection]);
+  const errors = useMemo(() => {
+    const errs = validateBuild(selection);
+
+    // Additional layout-based validations
+    if (selectedCase?.supportedLayouts && !selectedCase.supportedLayouts.includes(selectedLayout)) {
+      errs.push({
+        message: `O case "${selectedCase.name}" não suporta o layout ${selectedLayout}.`,
+        severity: "error",
+      });
+    }
+    if (selectedPcb?.layout && selectedPcb.layout !== selectedLayout) {
+      errs.push({
+        message: `A PCB "${selectedPcb.name}" (${selectedPcb.layout}) não corresponde ao layout ${selectedLayout}.`,
+        severity: "error",
+      });
+    }
+
+    return errs;
+  }, [selection, selectedLayout, selectedCase, selectedPcb]);
+
   const hasErrors = errors.some((e) => e.severity === "error");
 
   const totalPrice = useMemo(
@@ -52,6 +82,20 @@ const BuilderPage = () => {
   );
 
   const selectedCount = [selectedSwitch, selectedKeycap, selectedPcb, selectedCase].filter(Boolean).length;
+
+  // Resolve case color hex
+  const caseColorHex = useMemo(() => {
+    if (selectedCase?.colors && selectedCaseColorId) {
+      const found = selectedCase.colors.find((c) => c.id === selectedCaseColorId);
+      if (found) return found.hex;
+    }
+    return selectedCase?.colors?.[0]?.hex ?? "#2a2a2e";
+  }, [selectedCase, selectedCaseColorId]);
+
+  const selectedCaseColor = useMemo(() => {
+    if (!selectedCase?.colors) return null;
+    return selectedCase.colors.find((c) => c.id === selectedCaseColorId) ?? selectedCase.colors[0] ?? null;
+  }, [selectedCase, selectedCaseColorId]);
 
   const getSelectedForCategory = (cat: ComponentCategory | "extras"): BuilderProduct | null => {
     if (cat === "extras") return null;
@@ -66,7 +110,22 @@ const BuilderPage = () => {
       case: setSelectedCase,
     };
     const current = selection[product.category as keyof BuildSelection];
-    setters[product.category](current?.id === product.id ? null : product);
+    if (current?.id === product.id) {
+      setters[product.category](null);
+      if (product.category === "case") setSelectedCaseColorId(null);
+    } else {
+      setters[product.category](product);
+      if (product.category === "case" && product.colors?.length) {
+        setSelectedCaseColorId(product.colors[0].id);
+      }
+    }
+  };
+
+  const handleLayoutChange = (layout: LayoutSize) => {
+    setSelectedLayout(layout);
+    // Clear incompatible selections
+    if (selectedCase?.layout && selectedCase.layout !== layout) setSelectedCase(null);
+    if (selectedPcb?.layout && selectedPcb.layout !== layout) setSelectedPcb(null);
   };
 
   const handleClearAll = () => {
@@ -74,6 +133,7 @@ const BuilderPage = () => {
     setSelectedKeycap(null);
     setSelectedPcb(null);
     setSelectedCase(null);
+    setSelectedCaseColorId(null);
   };
 
   const handleAddToCart = () => {
@@ -88,7 +148,7 @@ const BuilderPage = () => {
     const parts = [selectedSwitch, selectedKeycap, selectedPcb, selectedCase].filter(Boolean) as BuilderProduct[];
     addItem({
       id: `build-${Date.now()}`,
-      name: `Custom Build: ${parts.map((p) => p.name).join(" + ")}`,
+      name: `Custom Build (${selectedLayout}): ${parts.map((p) => p.name).join(" + ")}`,
       price: totalPrice,
       image: "⌨️",
     });
@@ -98,10 +158,10 @@ const BuilderPage = () => {
   const errorCategories = new Set<string>();
   errors.forEach((e) => {
     if (e.severity === "error") {
-      if (e.message.includes("Switch")) errorCategories.add("switch");
-      if (e.message.includes("Keycap") || e.message.includes("keycap")) errorCategories.add("keycap");
-      if (e.message.includes("PCB")) errorCategories.add("pcb");
-      if (e.message.includes("case") || e.message.includes("Case")) errorCategories.add("case");
+      if (e.message.toLowerCase().includes("switch")) errorCategories.add("switch");
+      if (e.message.toLowerCase().includes("keycap")) errorCategories.add("keycap");
+      if (e.message.toLowerCase().includes("pcb")) errorCategories.add("pcb");
+      if (e.message.toLowerCase().includes("case")) errorCategories.add("case");
     }
   });
 
@@ -113,7 +173,7 @@ const BuilderPage = () => {
         <p className="text-muted-foreground mt-1">Monte seu teclado passo a passo — compatibilidade verificada em tempo real.</p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
         {/* ── Center: keyboard preview ──────────────────────── */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -122,10 +182,12 @@ const BuilderPage = () => {
           className="glass rounded-2xl p-8 flex flex-col items-center justify-center min-h-[420px]"
         >
           <KeyboardPreview
+            selectedLayout={selectedLayout}
             selectedCase={selectedCase}
             selectedKeycap={selectedKeycap}
             selectedSwitch={selectedSwitch}
             selectedPcb={selectedPcb}
+            caseColor={caseColorHex}
           />
         </motion.div>
 
@@ -134,9 +196,16 @@ const BuilderPage = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.15 }}
-          className="space-y-3"
+          className="space-y-4"
         >
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Componentes</h2>
+          {/* Layout selector */}
+          <LayoutSelector selected={selectedLayout} onChange={handleLayoutChange} />
+
+          {/* Divider */}
+          <div className="border-t border-border" />
+
+          {/* Category cards */}
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Componentes</h2>
 
           {categoryOrder.map((cat) => (
             <CategoryCard
@@ -144,12 +213,29 @@ const BuilderPage = () => {
               category={cat}
               selectedItem={getSelectedForCategory(cat)}
               hasError={errorCategories.has(cat)}
+              selectedColor={cat === "case" ? selectedCaseColor : undefined}
               onClick={() => setOpenCategory(cat === "extras" ? null : cat)}
             />
           ))}
 
+          {/* Inline case color picker when case is selected */}
+          {selectedCase?.colors && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="rounded-xl bg-card border border-border p-3 space-y-2"
+            >
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Cor do Case</p>
+              <ColorPicker
+                colors={selectedCase.colors}
+                selected={selectedCaseColorId}
+                onChange={setSelectedCaseColorId}
+              />
+            </motion.div>
+          )}
+
           {/* Price & actions */}
-          <div className="border-t border-border pt-4 mt-4 space-y-3">
+          <div className="border-t border-border pt-4 space-y-3">
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total estimado</p>
@@ -182,7 +268,7 @@ const BuilderPage = () => {
           {/* Errors */}
           <AnimatePresence mode="sync">
             {errors.length > 0 && (
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2">
                 {errors.map((err, i) => (
                   <BuildAlert key={i} error={err} />
                 ))}
@@ -196,7 +282,10 @@ const BuilderPage = () => {
       <ProductModal
         category={openCategory as ComponentCategory | null}
         selection={selection}
+        selectedLayout={selectedLayout}
+        selectedCaseColor={selectedCaseColorId}
         onSelect={handleSelect}
+        onCaseColorChange={setSelectedCaseColorId}
         onClose={() => setOpenCategory(null)}
       />
     </div>
