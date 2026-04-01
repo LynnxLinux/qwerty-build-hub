@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ChevronRight, Box, Cpu, Grid3X3, CircuitBoard, Sparkles } from "lucide-react";
-import type { ComponentCategory } from "@/data/builderProducts";
+import type { ComponentCategory, CaseColor } from "@/data/builderProducts";
 import type { BuilderProduct } from "@/data/builderProducts";
 
 const categoryIcons: Record<ComponentCategory | "extras", React.ElementType> = {
@@ -24,9 +24,11 @@ interface CategoryCardProps {
   selectedItem: BuilderProduct | null;
   onClick: () => void;
   hasError?: boolean;
+  /** For case category: currently selected color */
+  selectedColor?: CaseColor | null;
 }
 
-const CategoryCard = ({ category, selectedItem, onClick, hasError }: CategoryCardProps) => {
+const CategoryCard = ({ category, selectedItem, onClick, hasError, selectedColor }: CategoryCardProps) => {
   const Icon = categoryIcons[category];
 
   return (
@@ -53,9 +55,19 @@ const CategoryCard = ({ category, selectedItem, onClick, hasError }: CategoryCar
         <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           {categoryLabels[category]}
         </p>
-        <p className="text-sm font-semibold text-foreground truncate" style={{ color: "hsl(var(--foreground-strong))" }}>
-          {selectedItem ? selectedItem.name : "Selecionar..."}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold truncate" style={{ color: "hsl(var(--foreground-strong))" }}>
+            {selectedItem ? selectedItem.name : "Selecionar..."}
+          </p>
+          {/* Color dot for case */}
+          {selectedColor && category === "case" && (
+            <span
+              className="h-4 w-4 rounded-full border border-white/20 shrink-0"
+              style={{ backgroundColor: selectedColor.hex }}
+              title={selectedColor.name}
+            />
+          )}
+        </div>
       </div>
 
       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
