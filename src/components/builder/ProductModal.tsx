@@ -19,7 +19,7 @@ interface ProductModalProps {
 }
 
 const ProductModal = ({ category, selection, onSelect, onClose }: ProductModalProps) => {
-  if (!category || category === "extras") return null;
+  if (!category) return null;
 
   const products = builderProducts.filter((p) => p.category === category);
 
