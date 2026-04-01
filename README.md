@@ -1,3 +1,6 @@
+O QWERTY é um site que auxilia na montagem de teclados personalizados, permitindo vc escolher quais peças quer
+
+
 Este projeto foi desenvolvido com o objetivo de criar uma aplicação moderna, funcional e de fácil utilização, utilizando tecnologias atuais do desenvolvimento web. A aplicação foi construída com foco em organização de código, componentização e boas práticas de desenvolvimento.
 
 Tecnologias Utilizadas:
