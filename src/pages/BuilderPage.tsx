@@ -1,248 +1,253 @@
 import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
+import { AlertTriangle, CheckCircle2, XCircle, ShoppingCart } from "lucide-react";
+import { builderProducts, type BuilderProduct, type ComponentCategory } from "@/data/builderProducts";
+import { isProductCompatible, validateBuild, type BuildSelection, type CompatibilityError } from "@/utils/compatibilidade";
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 25, mass: 0.5 };
 
-const layouts = [
-  { id: "60", label: "60%", price: 0, keys: "61 keys" },
-  { id: "65", label: "65%", price: 15, keys: "68 keys" },
-  { id: "tkl", label: "TKL", price: 30, keys: "87 keys" },
-  { id: "full", label: "Full Size", price: 45, keys: "104 keys" },
-];
+const categoryLabels: Record<ComponentCategory, string> = {
+  switch: "Switches",
+  keycap: "Keycaps",
+  pcb: "PCB",
+  case: "Case",
+};
 
-const switches = [
-  { id: "linear", label: "Linear", desc: "Smooth, no bump", price: 32, color: "bg-red-500" },
-  { id: "tactile", label: "Tactile", desc: "Noticeable bump", price: 38, color: "bg-amber-600" },
-  { id: "clicky", label: "Clicky", desc: "Bump + click sound", price: 28, color: "bg-blue-500" },
-];
+const categoryOrder: ComponentCategory[] = ["switch", "keycap", "pcb", "case"];
 
-const keycapStyles = [
-  { id: "minimal", label: "Minimal White", price: 49, emoji: "⚪" },
-  { id: "retro", label: "Retro Terminal", price: 69, emoji: "🖥️" },
-  { id: "laser", label: "Laser Purple", price: 89, emoji: "🟣" },
-  { id: "botanical", label: "Botanical", price: 79, emoji: "🌿" },
-];
+/* ── Compatibility badge ───────────────────────────────────── */
+const CompatBadge = ({ compatible }: { compatible: boolean }) =>
+  compatible ? (
+    <span className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "hsl(160, 60%, 50%)" }}>
+      <CheckCircle2 className="h-3 w-3" /> Compatível
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
+      <XCircle className="h-3 w-3" /> Incompatível
+    </span>
+  );
 
-const caseColors = [
-  { id: "black", label: "Matte Black", hex: "#1a1a2e" },
-  { id: "silver", label: "Silver", hex: "#94a3b8" },
-  { id: "navy", label: "Navy Blue", hex: "#1e3a5f" },
-  { id: "purple", label: "Deep Purple", hex: "#4c1d95" },
-];
+/* ── Product card ──────────────────────────────────────────── */
+interface ProductCardProps {
+  product: BuilderProduct;
+  selected: boolean;
+  compatible: boolean;
+  onSelect: () => void;
+}
 
-const rgbOptions = [
-  { id: "none", label: "None", price: 0 },
-  { id: "white", label: "White", price: 15 },
-  { id: "rgb", label: "Full RGB", price: 30 },
-];
+const ProductCard = ({ product, selected, compatible, onSelect }: ProductCardProps) => (
+  <motion.button
+    layout
+    whileHover={compatible ? { scale: 1.02 } : undefined}
+    whileTap={compatible ? { scale: 0.98 } : undefined}
+    transition={spring}
+    disabled={!compatible}
+    onClick={onSelect}
+    className={`relative flex flex-col items-start gap-1 rounded-lg p-4 text-left transition-all w-full ${
+      selected
+        ? "bg-primary/20 border-2 border-primary ring-1 ring-primary/30"
+        : compatible
+          ? "bg-accent border border-border hover:border-primary/40"
+          : "bg-accent/40 border border-border opacity-50 cursor-not-allowed"
+    }`}
+  >
+    <div className="flex items-center justify-between w-full">
+      <span className="text-2xl">{product.image}</span>
+      <CompatBadge compatible={compatible} />
+    </div>
+    <p className="text-sm font-semibold text-foreground-strong">{product.name}</p>
+    <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+    <div className="flex items-center justify-between w-full mt-1">
+      <span className="text-xs text-muted-foreground">
+        {product.type} {product.layout ? `• ${product.layout}` : ""}
+      </span>
+      <span className="text-sm font-bold text-foreground-strong tabular-nums">${product.price.toFixed(2)}</span>
+    </div>
+    {!compatible && (
+      <p className="text-[10px] text-destructive mt-1">Este item não é compatível com sua configuração atual</p>
+    )}
+  </motion.button>
+);
 
-const cableOptions = [
-  { id: "straight", label: "Straight USB-C", price: 19 },
-  { id: "coiled", label: "Coiled USB-C", price: 49 },
-];
+/* ── Error alert ───────────────────────────────────────────── */
+const BuildAlert = ({ error }: { error: CompatibilityError }) => (
+  <motion.div
+    initial={{ opacity: 0, height: 0 }}
+    animate={{ opacity: 1, height: "auto" }}
+    exit={{ opacity: 0, height: 0 }}
+    className={`flex items-start gap-2 rounded-md p-3 text-sm ${
+      error.severity === "error"
+        ? "bg-destructive/10 border border-destructive/30 text-destructive"
+        : "bg-yellow-500/10 border border-yellow-500/30 text-yellow-400"
+    }`}
+  >
+    <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+    <span>{error.message}</span>
+  </motion.div>
+);
 
+/* ── Main page ─────────────────────────────────────────────── */
 const BuilderPage = () => {
   const { addItem } = useCart();
-  const [layout, setLayout] = useState("65");
-  const [switchType, setSwitchType] = useState("linear");
-  const [keycap, setKeycap] = useState("minimal");
-  const [caseColor, setCaseColor] = useState("black");
-  const [rgb, setRgb] = useState("none");
-  const [cable, setCable] = useState("straight");
+  const [selectedSwitch, setSelectedSwitch] = useState<BuilderProduct | null>(null);
+  const [selectedKeycap, setSelectedKeycap] = useState<BuilderProduct | null>(null);
+  const [selectedPcb, setSelectedPcb] = useState<BuilderProduct | null>(null);
+  const [selectedCase, setSelectedCase] = useState<BuilderProduct | null>(null);
+
+  const selection: BuildSelection = useMemo(
+    () => ({ switch: selectedSwitch, keycap: selectedKeycap, pcb: selectedPcb, case: selectedCase }),
+    [selectedSwitch, selectedKeycap, selectedPcb, selectedCase],
+  );
+
+  const errors = useMemo(() => validateBuild(selection), [selection]);
+  const hasErrors = errors.some((e) => e.severity === "error");
 
   const totalPrice = useMemo(() => {
-    const base = 89.99;
-    const l = layouts.find((x) => x.id === layout)!.price;
-    const s = switches.find((x) => x.id === switchType)!.price;
-    const k = keycapStyles.find((x) => x.id === keycap)!.price;
-    const r = rgbOptions.find((x) => x.id === rgb)!.price;
-    const c = cableOptions.find((x) => x.id === cable)!.price;
-    return base + l + s + k + r + c;
-  }, [layout, switchType, keycap, rgb, cable]);
+    return [selectedSwitch, selectedKeycap, selectedPcb, selectedCase]
+      .filter(Boolean)
+      .reduce((sum, p) => sum + p!.price, 0);
+  }, [selectedSwitch, selectedKeycap, selectedPcb, selectedCase]);
 
-  const handleAddToCart = () => {
-    const selectedKeycap = keycapStyles.find((x) => x.id === keycap)!;
-    const selectedLayout = layouts.find((x) => x.id === layout)!;
-    addItem({
-      id: `build-${Date.now()}`,
-      name: `Custom ${selectedLayout.label} - ${selectedKeycap.label}`,
-      price: totalPrice,
-      image: selectedKeycap.emoji,
-    });
-    toast.success("Build added to cart!");
+  const selectedCount = [selectedSwitch, selectedKeycap, selectedPcb, selectedCase].filter(Boolean).length;
+
+  const handleSelect = (product: BuilderProduct) => {
+    const setters: Record<ComponentCategory, React.Dispatch<React.SetStateAction<BuilderProduct | null>>> = {
+      switch: setSelectedSwitch,
+      keycap: setSelectedKeycap,
+      pcb: setSelectedPcb,
+      case: setSelectedCase,
+    };
+    const current = selection[product.category as keyof BuildSelection];
+    if (current?.id === product.id) {
+      setters[product.category](null);
+    } else {
+      setters[product.category](product);
+    }
   };
 
-  const selectedCase = caseColors.find((x) => x.id === caseColor)!;
-  const selectedKeycapStyle = keycapStyles.find((x) => x.id === keycap)!;
+  const handleAddToCart = () => {
+    if (hasErrors) {
+      toast.error("Corrija os erros de compatibilidade antes de adicionar ao carrinho.");
+      return;
+    }
+    if (selectedCount === 0) {
+      toast.error("Selecione pelo menos um componente.");
+      return;
+    }
+    const parts = [selectedSwitch, selectedKeycap, selectedPcb, selectedCase].filter(Boolean) as BuilderProduct[];
+    const name = parts.map((p) => p.name).join(" + ");
+    addItem({
+      id: `build-${Date.now()}`,
+      name: `Custom Build: ${name}`,
+      price: totalPrice,
+      image: "⌨️",
+    });
+    toast.success("Build adicionada ao carrinho!");
+  };
+
+  const handleClearAll = () => {
+    setSelectedSwitch(null);
+    setSelectedKeycap(null);
+    setSelectedPcb(null);
+    setSelectedCase(null);
+  };
 
   return (
     <div className="container mx-auto px-4 py-12">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         <h1 className="text-4xl font-bold tracking-tight mb-2">Keyboard Builder</h1>
-        <p className="text-foreground mb-10">Configure every detail. Preview in real-time.</p>
+        <p className="text-foreground mb-10">
+          Selecione seus componentes — o sistema verifica a compatibilidade automaticamente.
+        </p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Preview */}
-        <div className="lg:col-span-2">
-          <div className="glass rounded-lg p-8 sticky top-24">
-            <div
-              className="rounded-lg p-8 flex items-center justify-center min-h-[320px] transition-colors duration-300"
-              style={{ backgroundColor: selectedCase.hex }}
-            >
-              <div className="text-center">
-                <div className="text-8xl mb-4">{selectedKeycapStyle.emoji}</div>
-                <p className="text-foreground-strong text-lg font-semibold">
-                  {layouts.find((x) => x.id === layout)!.label} Layout
-                </p>
-                <p className="text-foreground text-sm">
-                  {switches.find((x) => x.id === switchType)!.label} • {selectedKeycapStyle.label} • {selectedCase.label}
-                </p>
-                {rgb !== "none" && (
-                  <div className="mt-3 text-xs text-primary font-medium uppercase tracking-widest">
-                    ✦ {rgbOptions.find((x) => x.id === rgb)!.label} Lighting
-                  </div>
+        {/* ── Sidebar: summary & errors ─────────────────────── */}
+        <div className="order-2 lg:order-1 lg:col-span-1">
+          <div className="glass rounded-lg p-6 sticky top-24 space-y-5">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong">Sua Build</h2>
+
+            {categoryOrder.map((cat) => {
+              const item = selection[cat as keyof BuildSelection];
+              return (
+                <div key={cat} className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{categoryLabels[cat]}</span>
+                  {item ? (
+                    <span className="text-foreground-strong font-medium truncate max-w-[180px]">{item.name}</span>
+                  ) : (
+                    <span className="text-muted-foreground/50 italic">—</span>
+                  )}
+                </div>
+              );
+            })}
+
+            <div className="border-t border-border pt-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground">Total</p>
+                <p className="text-2xl font-bold text-foreground-strong tabular-nums">${totalPrice.toFixed(2)}</p>
+              </div>
+              <div className="flex gap-2">
+                {selectedCount > 0 && (
+                  <button onClick={handleClearAll} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline">
+                    Limpar
+                  </button>
                 )}
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={spring}
+                  onClick={handleAddToCart}
+                  disabled={hasErrors || selectedCount === 0}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-semibold rounded-md shadow-button disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  Adicionar
+                </motion.button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
-              <div>
-                <p className="text-sm text-foreground">Total Price</p>
-                <p className="text-3xl font-bold text-foreground-strong tabular-nums">${totalPrice.toFixed(2)}</p>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                transition={spring}
-                onClick={handleAddToCart}
-                className="px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button"
-              >
-                Add to Cart
-              </motion.button>
-            </div>
+            {/* Errors / warnings */}
+            <AnimatePresence mode="sync">
+              {errors.length > 0 && (
+                <div className="space-y-2">
+                  {errors.map((err, i) => (
+                    <BuildAlert key={i} error={err} />
+                  ))}
+                </div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="space-y-6">
-          {/* Layout */}
-          <div className="bg-card rounded-lg shadow-card p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong mb-3">Layout</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {layouts.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => setLayout(l.id)}
-                  className={`p-3 rounded-md text-sm font-medium transition-all ${
-                    layout === l.id ? "bg-primary text-primary-foreground" : "bg-accent text-foreground hover:bg-accent/80"
-                  }`}
-                >
-                  {l.label}
-                  <span className="block text-xs opacity-70">{l.keys}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Switches */}
-          <div className="bg-card rounded-lg shadow-card p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong mb-3">Switches</h3>
-            <div className="space-y-2">
-              {switches.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSwitchType(s.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-md text-sm font-medium transition-all ${
-                    switchType === s.id ? "bg-primary text-primary-foreground" : "bg-accent text-foreground hover:bg-accent/80"
-                  }`}
-                >
-                  <span className={`h-3 w-3 rounded-full ${s.color}`} />
-                  <div className="text-left">
-                    <div>{s.label}</div>
-                    <div className="text-xs opacity-70">{s.desc}</div>
-                  </div>
-                  <span className="ml-auto text-xs tabular-nums">${s.price}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Keycaps */}
-          <div className="bg-card rounded-lg shadow-card p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong mb-3">Keycaps</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {keycapStyles.map((k) => (
-                <button
-                  key={k.id}
-                  onClick={() => setKeycap(k.id)}
-                  className={`p-3 rounded-md text-sm font-medium transition-all ${
-                    keycap === k.id ? "bg-primary text-primary-foreground" : "bg-accent text-foreground hover:bg-accent/80"
-                  }`}
-                >
-                  <span className="text-2xl block mb-1">{k.emoji}</span>
-                  {k.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Case Color */}
-          <div className="bg-card rounded-lg shadow-card p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong mb-3">Case Color</h3>
-            <div className="flex gap-3">
-              {caseColors.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setCaseColor(c.id)}
-                  className={`h-10 w-10 rounded-full border-2 transition-all ${
-                    caseColor === c.id ? "border-primary scale-110" : "border-transparent"
-                  }`}
-                  style={{ backgroundColor: c.hex }}
-                  title={c.label}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* RGB */}
-          <div className="bg-card rounded-lg shadow-card p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong mb-3">RGB Lighting</h3>
-            <div className="flex gap-2">
-              {rgbOptions.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => setRgb(r.id)}
-                  className={`flex-1 p-3 rounded-md text-sm font-medium transition-all ${
-                    rgb === r.id ? "bg-primary text-primary-foreground" : "bg-accent text-foreground hover:bg-accent/80"
-                  }`}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Cable */}
-          <div className="bg-card rounded-lg shadow-card p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong mb-3">Cable</h3>
-            <div className="space-y-2">
-              {cableOptions.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setCable(c.id)}
-                  className={`w-full flex justify-between p-3 rounded-md text-sm font-medium transition-all ${
-                    cable === c.id ? "bg-primary text-primary-foreground" : "bg-accent text-foreground hover:bg-accent/80"
-                  }`}
-                >
-                  {c.label}
-                  <span className="tabular-nums">${c.price}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* ── Main: product grid per category ───────────────── */}
+        <div className="order-1 lg:order-2 lg:col-span-2 space-y-8">
+          {categoryOrder.map((cat) => {
+            const products = builderProducts.filter((p) => p.category === cat);
+            return (
+              <section key={cat}>
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong mb-3">
+                  {categoryLabels[cat]}
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {products.map((product) => {
+                    const compatible = isProductCompatible(product, selection);
+                    const selected = selection[cat as keyof BuildSelection]?.id === product.id;
+                    return (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        selected={selected}
+                        compatible={compatible || selected}
+                        onSelect={() => handleSelect(product)}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </div>
       </div>
     </div>
