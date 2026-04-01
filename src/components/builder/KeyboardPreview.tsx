@@ -38,10 +38,22 @@ const fRow = {
 };
 
 function getRowsForLayout(layout: LayoutSize) {
-  if (layout === "75%" || layout === "TKL" || layout === "Full") {
-    return [fRow, ...baseRows];
+  const hasFRow = layout === "75%" || layout === "TKL" || layout === "Full";
+
+  if (hasFRow) {
+    const adjustedBaseRows = [...baseRows];
+
+    // Remove o ESC da primeira linha
+    adjustedBaseRows[0] = {
+      ...adjustedBaseRows[0],
+      keys: adjustedBaseRows[0].keys.slice(1),
+      widths: adjustedBaseRows[0].widths.slice(1),
+    };
+
+    return [fRow, ...adjustedBaseRows];
   }
-  return baseRows; // 60%, 65%
+
+  return baseRows;
 }
 
 const KeyboardPreview = ({ selectedLayout, selectedCase, selectedKeycap, selectedSwitch, selectedPcb, caseColor }: KeyboardPreviewProps) => {
