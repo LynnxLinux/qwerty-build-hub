@@ -2,88 +2,29 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, XCircle, ShoppingCart } from "lucide-react";
-import { builderProducts, type BuilderProduct, type ComponentCategory } from "@/data/builderProducts";
-import { isProductCompatible, validateBuild, type BuildSelection, type CompatibilityError } from "@/utils/compatibilidade";
+import { AlertTriangle, ShoppingCart, RotateCcw } from "lucide-react";
+import type { BuilderProduct, ComponentCategory } from "@/data/builderProducts";
+import { validateBuild, type BuildSelection, type CompatibilityError } from "@/utils/compatibilidade";
 
-const spring = { type: "spring" as const, stiffness: 300, damping: 25, mass: 0.5 };
+import KeyboardPreview from "@/components/builder/KeyboardPreview";
+import CategoryCard from "@/components/builder/CategoryCard";
+import ProductModal from "@/components/builder/ProductModal";
 
-const categoryLabels: Record<ComponentCategory, string> = {
-  switch: "Switches",
-  keycap: "Keycaps",
-  pcb: "PCB",
-  case: "Case",
-};
+const categoryOrder: (ComponentCategory | "extras")[] = ["case", "switch", "keycap", "pcb", "extras"];
 
-const categoryOrder: ComponentCategory[] = ["switch", "keycap", "pcb", "case"];
-
-/* ── Compatibility badge ───────────────────────────────────── */
-const CompatBadge = ({ compatible }: { compatible: boolean }) =>
-  compatible ? (
-    <span className="inline-flex items-center gap-1 text-xs font-medium" style={{ color: "hsl(160, 60%, 50%)" }}>
-      <CheckCircle2 className="h-3 w-3" /> Compatível
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-destructive">
-      <XCircle className="h-3 w-3" /> Incompatível
-    </span>
-  );
-
-/* ── Product card ──────────────────────────────────────────── */
-interface ProductCardProps {
-  product: BuilderProduct;
-  selected: boolean;
-  compatible: boolean;
-  onSelect: () => void;
-}
-
-const ProductCard = ({ product, selected, compatible, onSelect }: ProductCardProps) => (
-  <motion.button
-    layout
-    whileHover={compatible ? { scale: 1.02 } : undefined}
-    whileTap={compatible ? { scale: 0.98 } : undefined}
-    transition={spring}
-    disabled={!compatible}
-    onClick={onSelect}
-    className={`relative flex flex-col items-start gap-1 rounded-lg p-4 text-left transition-all w-full ${
-      selected
-        ? "bg-primary/20 border-2 border-primary ring-1 ring-primary/30"
-        : compatible
-          ? "bg-accent border border-border hover:border-primary/40"
-          : "bg-accent/40 border border-border opacity-50 cursor-not-allowed"
-    }`}
-  >
-    <div className="flex items-center justify-between w-full">
-      <span className="text-2xl">{product.image}</span>
-      <CompatBadge compatible={compatible} />
-    </div>
-    <p className="text-sm font-semibold text-foreground-strong">{product.name}</p>
-    <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
-    <div className="flex items-center justify-between w-full mt-1">
-      <span className="text-xs text-muted-foreground">
-        {product.type} {product.layout ? `• ${product.layout}` : ""}
-      </span>
-      <span className="text-sm font-bold text-foreground-strong tabular-nums">${product.price.toFixed(2)}</span>
-    </div>
-    {!compatible && (
-      <p className="text-[10px] text-destructive mt-1">Este item não é compatível com sua configuração atual</p>
-    )}
-  </motion.button>
-);
-
-/* ── Error alert ───────────────────────────────────────────── */
+/* ── Alert row ─────────────────────────────────────────────── */
 const BuildAlert = ({ error }: { error: CompatibilityError }) => (
   <motion.div
     initial={{ opacity: 0, height: 0 }}
     animate={{ opacity: 1, height: "auto" }}
     exit={{ opacity: 0, height: 0 }}
-    className={`flex items-start gap-2 rounded-md p-3 text-sm ${
+    className={`flex items-start gap-2 rounded-lg p-3 text-xs ${
       error.severity === "error"
         ? "bg-destructive/10 border border-destructive/30 text-destructive"
         : "bg-yellow-500/10 border border-yellow-500/30 text-yellow-400"
     }`}
   >
-    <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
     <span>{error.message}</span>
   </motion.div>
 );
@@ -95,6 +36,7 @@ const BuilderPage = () => {
   const [selectedKeycap, setSelectedKeycap] = useState<BuilderProduct | null>(null);
   const [selectedPcb, setSelectedPcb] = useState<BuilderProduct | null>(null);
   const [selectedCase, setSelectedCase] = useState<BuilderProduct | null>(null);
+  const [openCategory, setOpenCategory] = useState<ComponentCategory | "extras" | null>(null);
 
   const selection: BuildSelection = useMemo(
     () => ({ switch: selectedSwitch, keycap: selectedKeycap, pcb: selectedPcb, case: selectedCase }),
@@ -104,13 +46,17 @@ const BuilderPage = () => {
   const errors = useMemo(() => validateBuild(selection), [selection]);
   const hasErrors = errors.some((e) => e.severity === "error");
 
-  const totalPrice = useMemo(() => {
-    return [selectedSwitch, selectedKeycap, selectedPcb, selectedCase]
-      .filter(Boolean)
-      .reduce((sum, p) => sum + p!.price, 0);
-  }, [selectedSwitch, selectedKeycap, selectedPcb, selectedCase]);
+  const totalPrice = useMemo(
+    () => [selectedSwitch, selectedKeycap, selectedPcb, selectedCase].filter(Boolean).reduce((s, p) => s + p!.price, 0),
+    [selectedSwitch, selectedKeycap, selectedPcb, selectedCase],
+  );
 
   const selectedCount = [selectedSwitch, selectedKeycap, selectedPcb, selectedCase].filter(Boolean).length;
+
+  const getSelectedForCategory = (cat: ComponentCategory | "extras"): BuilderProduct | null => {
+    if (cat === "extras") return null;
+    return selection[cat as keyof BuildSelection];
+  };
 
   const handleSelect = (product: BuilderProduct) => {
     const setters: Record<ComponentCategory, React.Dispatch<React.SetStateAction<BuilderProduct | null>>> = {
@@ -120,11 +66,14 @@ const BuilderPage = () => {
       case: setSelectedCase,
     };
     const current = selection[product.category as keyof BuildSelection];
-    if (current?.id === product.id) {
-      setters[product.category](null);
-    } else {
-      setters[product.category](product);
-    }
+    setters[product.category](current?.id === product.id ? null : product);
+  };
+
+  const handleClearAll = () => {
+    setSelectedSwitch(null);
+    setSelectedKeycap(null);
+    setSelectedPcb(null);
+    setSelectedCase(null);
   };
 
   const handleAddToCart = () => {
@@ -137,119 +86,119 @@ const BuilderPage = () => {
       return;
     }
     const parts = [selectedSwitch, selectedKeycap, selectedPcb, selectedCase].filter(Boolean) as BuilderProduct[];
-    const name = parts.map((p) => p.name).join(" + ");
     addItem({
       id: `build-${Date.now()}`,
-      name: `Custom Build: ${name}`,
+      name: `Custom Build: ${parts.map((p) => p.name).join(" + ")}`,
       price: totalPrice,
       image: "⌨️",
     });
     toast.success("Build adicionada ao carrinho!");
   };
 
-  const handleClearAll = () => {
-    setSelectedSwitch(null);
-    setSelectedKeycap(null);
-    setSelectedPcb(null);
-    setSelectedCase(null);
-  };
+  const errorCategories = new Set<string>();
+  errors.forEach((e) => {
+    if (e.severity === "error") {
+      if (e.message.includes("Switch")) errorCategories.add("switch");
+      if (e.message.includes("Keycap") || e.message.includes("keycap")) errorCategories.add("keycap");
+      if (e.message.includes("PCB")) errorCategories.add("pcb");
+      if (e.message.includes("case") || e.message.includes("Case")) errorCategories.add("case");
+    }
+  });
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <h1 className="text-4xl font-bold tracking-tight mb-2">Keyboard Builder</h1>
-        <p className="text-foreground mb-10">
-          Selecione seus componentes — o sistema verifica a compatibilidade automaticamente.
-        </p>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Keyboard Builder</h1>
+        <p className="text-muted-foreground mt-1">Monte seu teclado passo a passo — compatibilidade verificada em tempo real.</p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* ── Sidebar: summary & errors ─────────────────────── */}
-        <div className="order-2 lg:order-1 lg:col-span-1">
-          <div className="glass rounded-lg p-6 sticky top-24 space-y-5">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong">Sua Build</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+        {/* ── Center: keyboard preview ──────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="glass rounded-2xl p-8 flex flex-col items-center justify-center min-h-[420px]"
+        >
+          <KeyboardPreview
+            selectedCase={selectedCase}
+            selectedKeycap={selectedKeycap}
+            selectedSwitch={selectedSwitch}
+            selectedPcb={selectedPcb}
+          />
+        </motion.div>
 
-            {categoryOrder.map((cat) => {
-              const item = selection[cat as keyof BuildSelection];
-              return (
-                <div key={cat} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{categoryLabels[cat]}</span>
-                  {item ? (
-                    <span className="text-foreground-strong font-medium truncate max-w-[180px]">{item.name}</span>
-                  ) : (
-                    <span className="text-muted-foreground/50 italic">—</span>
-                  )}
-                </div>
-              );
-            })}
+        {/* ── Right sidebar ────────────────────────────────── */}
+        <motion.aside
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-3"
+        >
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Componentes</h2>
 
-            <div className="border-t border-border pt-4 flex items-center justify-between">
+          {categoryOrder.map((cat) => (
+            <CategoryCard
+              key={cat}
+              category={cat}
+              selectedItem={getSelectedForCategory(cat)}
+              hasError={errorCategories.has(cat)}
+              onClick={() => setOpenCategory(cat === "extras" ? null : cat)}
+            />
+          ))}
+
+          {/* Price & actions */}
+          <div className="border-t border-border pt-4 mt-4 space-y-3">
+            <div className="flex items-end justify-between">
               <div>
-                <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold text-foreground-strong tabular-nums">${totalPrice.toFixed(2)}</p>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total estimado</p>
+                <p className="text-2xl font-bold tabular-nums" style={{ color: "hsl(var(--foreground-strong))" }}>
+                  ${totalPrice.toFixed(2)}
+                </p>
               </div>
-              <div className="flex gap-2">
-                {selectedCount > 0 && (
-                  <button onClick={handleClearAll} className="text-xs text-muted-foreground hover:text-foreground transition-colors underline">
-                    Limpar
-                  </button>
-                )}
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={spring}
-                  onClick={handleAddToCart}
-                  disabled={hasErrors || selectedCount === 0}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-semibold rounded-md shadow-button disabled:opacity-50 disabled:cursor-not-allowed"
+              {selectedCount > 0 && (
+                <button
+                  onClick={handleClearAll}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <ShoppingCart className="h-4 w-4" />
-                  Adicionar
-                </motion.button>
-              </div>
+                  <RotateCcw className="h-3 w-3" /> Limpar
+                </button>
+              )}
             </div>
 
-            {/* Errors / warnings */}
-            <AnimatePresence mode="sync">
-              {errors.length > 0 && (
-                <div className="space-y-2">
-                  {errors.map((err, i) => (
-                    <BuildAlert key={i} error={err} />
-                  ))}
-                </div>
-              )}
-            </AnimatePresence>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleAddToCart}
+              disabled={hasErrors || selectedCount === 0}
+              className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-primary text-primary-foreground font-semibold rounded-xl shadow-button disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              Adicionar ao carrinho
+            </motion.button>
           </div>
-        </div>
 
-        {/* ── Main: product grid per category ───────────────── */}
-        <div className="order-1 lg:order-2 lg:col-span-2 space-y-8">
-          {categoryOrder.map((cat) => {
-            const products = builderProducts.filter((p) => p.category === cat);
-            return (
-              <section key={cat}>
-                <h3 className="text-sm font-semibold uppercase tracking-widest text-foreground-strong mb-3">
-                  {categoryLabels[cat]}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {products.map((product) => {
-                    const compatible = isProductCompatible(product, selection);
-                    const selected = selection[cat as keyof BuildSelection]?.id === product.id;
-                    return (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        selected={selected}
-                        compatible={compatible || selected}
-                        onSelect={() => handleSelect(product)}
-                      />
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+          {/* Errors */}
+          <AnimatePresence mode="sync">
+            {errors.length > 0 && (
+              <div className="space-y-2 pt-2">
+                {errors.map((err, i) => (
+                  <BuildAlert key={i} error={err} />
+                ))}
+              </div>
+            )}
+          </AnimatePresence>
+        </motion.aside>
       </div>
+
+      {/* Product selection modal */}
+      <ProductModal
+        category={openCategory as ComponentCategory | null}
+        selection={selection}
+        onSelect={handleSelect}
+        onClose={() => setOpenCategory(null)}
+      />
     </div>
   );
 };
