@@ -6,11 +6,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navLinks = [
-  { to: "/", label: "Home" },
-  { to: "/builder", label: "Keyboard Builder" },
-  { to: "/products", label: "Products" },
-  { to: "/community", label: "Community" },
-  { to: "/about", label: "About" },
+  { to: "/", label: "Inicio" },
+  { to: "/builder", label: "Monte o seu" },
+  { to: "/products", label: "Produtos" },
+  { to: "/community", label: "Comunidade" },
+  { to: "/about", label: "Sobre nós" },
 ];
 
 const Navbar = () => {
@@ -66,7 +66,7 @@ const Navbar = () => {
               to="/login"
               className="hidden md:block text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
-              Login / Sign up
+              Login / Cadastre-se
             </Link>
           )}
 
@@ -111,7 +111,7 @@ const Navbar = () => {
                   <button onClick={() => { logout(); setMobileOpen(false); }} className="px-4 py-2 rounded-md text-sm font-medium text-left text-foreground hover:bg-accent transition-colors">Logout</button>
                 </>
               ) : (
-                <Link to="/login" onClick={() => setMobileOpen(false)} className="px-4 py-2 rounded-md text-sm font-medium text-primary">Login / Sign up</Link>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="px-4 py-2 rounded-md text-sm font-medium text-primary">Login / Cadastre-se</Link>
               )}
             </div>
           </motion.div>

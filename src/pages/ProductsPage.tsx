@@ -12,7 +12,7 @@ const ProductsPage = () => {
   const [sort, setSort] = useState("popular");
 
   const filtered = useMemo(() => {
-    let result = products;
+    let result = [...products];
     if (category !== "All") result = result.filter((p) => p.category === category);
     if (brand !== "All") result = result.filter((p) => p.brand === brand);
     if (sort === "price-low") result = [...result].sort((a, b) => a.price - b.price);
@@ -24,11 +24,11 @@ const ProductsPage = () => {
   return (
     <div className="container mx-auto px-4 py-12">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <h1 className="text-4xl font-bold tracking-tight mb-2">Products</h1>
-        <p className="text-foreground mb-8">Premium parts for your next build.</p>
+        <h1 className="text-4xl font-bold tracking-tight mb-2">Produtos</h1>
+        <p className="text-foreground mb-8">Peças premium para o seu próximo setup.</p>
       </motion.div>
 
-      {/* Filters */}
+      {/* Filtros */}
       <div className="flex flex-wrap gap-4 mb-8">
         <div className="flex gap-2 flex-wrap">
           {categories.map((c) => (
@@ -39,31 +39,35 @@ const ProductsPage = () => {
                 category === c ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-accent"
               }`}
             >
-              {c}
+              {c === "All" ? "Todos" : c}
             </button>
           ))}
         </div>
+
         <select
           value={brand}
           onChange={(e) => setBrand(e.target.value)}
           className="bg-card border border-border rounded-md px-3 py-2 text-sm text-foreground-strong focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
         >
           {brands.map((b) => (
-            <option key={b} value={b}>{b === "All" ? "All Brands" : b}</option>
+            <option key={b} value={b}>
+              {b === "All" ? "Todas as marcas" : b}
+            </option>
           ))}
         </select>
+
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
           className="bg-card border border-border rounded-md px-3 py-2 text-sm text-foreground-strong focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
         >
-          <option value="popular">Most Popular</option>
-          <option value="price-low">Price: Low to High</option>
-          <option value="price-high">Price: High to Low</option>
+          <option value="popular">Mais populares</option>
+          <option value="price-low">Preço: menor para maior</option>
+          <option value="price-high">Preço: maior para menor</option>
         </select>
       </div>
 
-      {/* Products Grid */}
+      {/* Grid de produtos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filtered.map((product, i) => (
           <motion.div
@@ -78,26 +82,45 @@ const ProductsPage = () => {
             <div className="h-40 bg-accent flex items-center justify-center text-5xl">
               {product.image}
             </div>
+
             <div className="p-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">{product.category}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
+                {product.category}
+              </p>
+
               <h3 className="font-semibold text-sm mb-1">{product.name}</h3>
-              <p className="text-xs text-foreground mb-3 line-clamp-2">{product.description}</p>
+
+              <p className="text-xs text-foreground mb-3 line-clamp-2">
+                {product.description}
+              </p>
+
               <div className="flex items-center gap-1 mb-3">
                 <Star className="h-3 w-3 fill-current text-primary" />
-                <span className="text-xs text-foreground tabular-nums">{product.rating}</span>
+                <span className="text-xs text-foreground tabular-nums">
+                  {product.rating}
+                </span>
               </div>
+
               <div className="flex items-center justify-between">
-                <span className="text-primary font-bold tabular-nums">${product.price.toFixed(2)}</span>
+                <span className="text-primary font-bold tabular-nums">
+                  ${product.price.toFixed(2)}
+                </span>
+
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => {
-                    addItem({ id: product.id, name: product.name, price: product.price, image: product.image });
-                    toast.success(`${product.name} added to cart`);
+                    addItem({
+                      id: product.id,
+                      name: product.name,
+                      price: product.price,
+                      image: product.image,
+                    });
+                    toast.success(`${product.name} adicionado ao carrinho`);
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-md"
                 >
-                  <ShoppingCart className="h-3 w-3" /> Add
+                  <ShoppingCart className="h-3 w-3" /> Adicionar
                 </motion.button>
               </div>
             </div>
@@ -107,7 +130,9 @@ const ProductsPage = () => {
 
       {filtered.length === 0 && (
         <div className="text-center py-20 text-foreground">
-          <p className="text-lg">No products found with current filters.</p>
+          <p className="text-lg">
+            Nenhum produto encontrado com os filtros atuais.
+          </p>
         </div>
       )}
     </div>
