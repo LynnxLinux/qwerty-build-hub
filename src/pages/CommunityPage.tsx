@@ -31,7 +31,11 @@ const CommunityPage = () => {
             className="bg-card rounded-lg shadow-card overflow-hidden"
           >
             <div className="h-48 bg-accent flex items-center justify-center text-7xl">
-              {build.image}
+              <img
+                src={build.image}
+                alt={build.title}
+                className="h=40 object-contain"
+                />
             </div>
             <div className="p-5">
               <div className="flex items-start justify-between mb-2">

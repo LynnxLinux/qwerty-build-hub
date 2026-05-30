@@ -2,17 +2,21 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Zap, Shield, Palette, Users } from "lucide-react";
 import heroImage from "@/assets/hero-keyboard.jpg";
+import midnightPurple from "@/assets/community-builds/midnight-purple.png"
+import brancoArtico from "@/assets/community-builds/branco-artico.png"
+import neonDreams from "@/assets/community-builds/neon-dreams.png"
+import gateronOil from "@/assets/produtos/gateron-oil.png"
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 25, mass: 0.5 };
 
 const featuredBuilds = [
-  { title: "Midnight Purple", layout: "65%", price: "R$287,49", emoji: "🟣" },
-  { title: "Arctic White", layout: "TKL", price: "R$312,99", emoji: "⚪" },
-  { title: "Neon Dreams", layout: "75%", price: "R$259,99", emoji: "🌈" },
+  { title: "Midnight Purple", layout: "75%", price: "R$299,99", image: midnightPurple },
+  { title: "Branco Ártico", layout: "TKL", price: "R$299,99", image: brancoArtico },
+  { title: "Neon Dreams", layout: "Full Size", price: "R$349,99", image: neonDreams },
 ];
 
 const popularProducts = [
-  { name: "Gateron Oil King", price: "R$32,99", category: "Switches", emoji: "🔴" },
+  { name: "Gateron Oil King", price: "R$32,99", category: "Switches", image: gateronOil },
   { name: "GMK Laser Keycaps", price: "R$129,99", category: "Keycaps", emoji: "🎨" },
   { name: "Coiled USB-C Cable", price: "R$49,99", category: "Cabos", emoji: "🔌" },
   { name: "Tofu65 Case", price: "R$119,99", category: "Cases", emoji: "🔲" },
@@ -82,8 +86,12 @@ const HomePage = () => (
             whileHover={{ y: -4 }}
             className="bg-card rounded-lg shadow-card overflow-hidden group cursor-pointer"
           >
-            <div className="h-48 bg-accent flex items-center justify-center text-6xl">
-              {build.emoji}
+            <div className="h-48 bg-accent flex items-center justify-center text-7xl">
+              <img
+                src={build.image}
+                alt={build.title}
+                className="h=40 object-contain"
+                />
             </div>
             <div className="p-5">
               <h3 className="font-semibold text-lg mb-1">{build.title}</h3>
@@ -110,7 +118,17 @@ const HomePage = () => (
             transition={{ delay: i * 0.08, duration: 0.4 }}
             className="bg-card rounded-lg shadow-card p-5 hover:bg-accent/50 transition-colors cursor-pointer"
           >
-            <div className="text-4xl mb-3">{p.emoji}</div>
+            <div className="flex items-center justify-center h-20 mb-3">
+              {p.image ? (
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="h-16 object-contain"
+              />
+            ) : (
+              <div className="text-4xl">{p.emoji}</div>
+           )}
+              </div>
             <h3 className="font-semibold text-sm mb-1">{p.name}</h3>
             <p className="text-xs text-muted-foreground mb-1">{p.category}</p>
             <p className="text-primary font-semibold text-sm tabular-nums">{p.price}</p>

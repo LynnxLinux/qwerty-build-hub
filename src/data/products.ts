@@ -1,3 +1,6 @@
+import gateronOil from "@/assets/produtos/gateron-oil.png"
+
+
 export interface Product {
   id: string;
   name: string;
@@ -7,10 +10,11 @@ export interface Product {
   brand: string;
   image: string;
   description: string;
+  imageSize?: string;
 }
 
 export const products: Product[] = [
-  { id: "sw-1", name: "Gateron Oil King (Linear)", price: 32.99, rating: 4.8, category: "Switches", brand: "Gateron", image: "🔴", description: "Switches lineares ultra suaves com lubrificação de fábrica." },
+  { id: "sw-1", name: "Gateron Oil King (Linear)", price: 32.99, rating: 4.8, category: "Switches", brand: "Gateron", image: gateronOil, description: "Switches lineares ultra suaves com lubrificação de fábrica.", imageSize: "h-28 w-28" },
   { id: "sw-2", name: "Cherry MX Blue (Clicky)", price: 28.99, rating: 4.5, category: "Switches", brand: "Cherry", image: "🔵", description: "Switches clicky clássicos com retorno tátil." },
   { id: "sw-3", name: "Holy Panda (Táctil)", price: 45.99, rating: 4.9, category: "Switches", brand: "Drop", image: "🟤", description: "Switches táteis premium com bump arredondado." },
 

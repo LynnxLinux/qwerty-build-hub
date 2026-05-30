@@ -79,9 +79,13 @@ const ProductsPage = () => {
             whileHover={{ y: -4 }}
             className="bg-card rounded-lg shadow-card overflow-hidden group"
           >
-            <div className="h-40 bg-accent flex items-center justify-center text-5xl">
-              {product.image}
-            </div>
+            <div className="h-48 bg-accent flex items-center justify-center text-7xl">
+              <img
+                src={product.image}
+                alt={product.name}
+                className={`${product.imageSize || "h-24 w-24"} object-contain transition-transform duration-300 group-hover:scale-105`}
+                />
+            </div>  
 
             <div className="p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
