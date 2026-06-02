@@ -1,5 +1,5 @@
 import gateronOil from "@/assets/produtos/gateron-oil.png"
-
+import gmkLaser from "@/assets/produtos/gmkLaser.png"
 
 export interface Product {
   id: string;
@@ -14,11 +14,11 @@ export interface Product {
 }
 
 export const products: Product[] = [
-  { id: "sw-1", name: "Gateron Oil King (Linear)", price: 32.99, rating: 4.8, category: "Switches", brand: "Gateron", image: gateronOil, description: "Switches lineares ultra suaves com lubrificação de fábrica.", imageSize: "h-28 w-28" },
+  { id: "sw-1", name: "Gateron Oil King (Linear)", price: 32.99, rating: 4.8, category: "Switches", brand: "Gateron", image: gateronOil, description: "Switches lineares ultra suaves com lubrificação de fábrica.", imageSize: "h-32 w-32" },
   { id: "sw-2", name: "Cherry MX Blue (Clicky)", price: 28.99, rating: 4.5, category: "Switches", brand: "Cherry", image: "🔵", description: "Switches clicky clássicos com retorno tátil." },
   { id: "sw-3", name: "Holy Panda (Táctil)", price: 45.99, rating: 4.9, category: "Switches", brand: "Drop", image: "🟤", description: "Switches táteis premium com bump arredondado." },
 
-  { id: "kc-1", name: "Keycaps GMK Laser", price: 129.99, rating: 4.9, category: "Keycaps", brand: "GMK", image: "🎨", description: "Keycaps ABS double-shot com icônico tema Laser." },
+  { id: "kc-1", name: "Keycaps GMK Laser", price: 129.99, rating: 4.9, category: "Keycaps", brand: "GMK", image: gmkLaser, description: "Keycaps ABS double-shot com icônico tema Laser.", imageSize:"h-48 w-48"},
   { id: "kc-2", name: "Keycaps PBT Botanical", price: 69.99, rating: 4.7, category: "Keycaps", brand: "Infinikey", image: "🌿", description: "Keycaps PBT dye-sub com tema botânico." },
   { id: "kc-3", name: "Keycaps MT3 Susuwatari", price: 89.99, rating: 4.6, category: "Keycaps", brand: "Drop", image: "⬛", description: "Keycaps esculpidos de perfil alto com estilo retrô." },
 

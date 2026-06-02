@@ -6,6 +6,7 @@ import midnightPurple from "@/assets/community-builds/midnight-purple.png"
 import brancoArtico from "@/assets/community-builds/branco-artico.png"
 import neonDreams from "@/assets/community-builds/neon-dreams.png"
 import gateronOil from "@/assets/produtos/gateron-oil.png"
+import gmkLaser from "@/assets/produtos/gmkLaser.png"
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 25, mass: 0.5 };
 
@@ -16,8 +17,8 @@ const featuredBuilds = [
 ];
 
 const popularProducts = [
-  { name: "Gateron Oil King", price: "R$32,99", category: "Switches", image: gateronOil },
-  { name: "GMK Laser Keycaps", price: "R$129,99", category: "Keycaps", emoji: "🎨" },
+  { name: "Gateron Oil King", price: "R$32,99", category: "Switches", image: gateronOil, imageSize: "h-28" },
+  { name: "GMK Laser Keycaps", price: "R$129,99", category: "Keycaps", image: gmkLaser, imageSize: "h-26"},
   { name: "Coiled USB-C Cable", price: "R$49,99", category: "Cabos", emoji: "🔌" },
   { name: "Tofu65 Case", price: "R$119,99", category: "Cases", emoji: "🔲" },
 ];
@@ -123,7 +124,7 @@ const HomePage = () => (
                 <img
                   src={p.image}
                   alt={p.name}
-                  className="h-16 object-contain"
+                  className={`${p.imageSize || "h-16"} object-contain`}
               />
             ) : (
               <div className="text-4xl">{p.emoji}</div>
