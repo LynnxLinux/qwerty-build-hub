@@ -7,6 +7,8 @@ import brancoArtico from "@/assets/community-builds/branco-artico.png"
 import neonDreams from "@/assets/community-builds/neon-dreams.png"
 import gateronOil from "@/assets/produtos/gateron-oil.png"
 import gmkLaser from "@/assets/produtos/gmkLaser.png"
+import caboCoiled from "@/assets/produtos/cabo-coiled.png"
+import tofu65 from "@/assets/produtos/Tofu65.png"
 
 const spring = { type: "spring" as const, stiffness: 300, damping: 25, mass: 0.5 };
 
@@ -19,8 +21,8 @@ const featuredBuilds = [
 const popularProducts = [
   { name: "Gateron Oil King", price: "R$32,99", category: "Switches", image: gateronOil, imageSize: "h-28" },
   { name: "GMK Laser Keycaps", price: "R$129,99", category: "Keycaps", image: gmkLaser, imageSize: "h-26"},
-  { name: "Coiled USB-C Cable", price: "R$49,99", category: "Cabos", emoji: "🔌" },
-  { name: "Tofu65 Case", price: "R$119,99", category: "Cases", emoji: "🔲" },
+  { name: "Coiled USB-C Cable", price: "R$49,99", category: "Cabos", image: caboCoiled, imageSize: "h-24" },
+  { name: "Tofu65 Case", price: "R$119,99", category: "Cases", image:tofu65, imageSize: "h-24" },
 ];
 
 const reasons = [
@@ -127,7 +129,7 @@ const HomePage = () => (
                   className={`${p.imageSize || "h-16"} object-contain`}
               />
             ) : (
-              <div className="text-4xl">{p.emoji}</div>
+              <div className="text-4xl">{p.image}</div>
            )}
               </div>
             <h3 className="font-semibold text-sm mb-1">{p.name}</h3>
