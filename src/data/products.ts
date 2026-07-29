@@ -3,6 +3,7 @@ import gmkLaser from "@/assets/produtos/gmkLaser.png"
 import tofu65 from "@/assets/produtos/Tofu65.png"
 import CaboC from "@/assets/produtos/cabo-coiled.png"
 import Holyp from "@/assets/produtos/mmd_holy_panda.png"
+import pbtbot from "@/assets/produtos/pbtbotanical.png"
 
 export interface Product {
   id: string;
@@ -22,7 +23,7 @@ export const products: Product[] = [
   { id: "sw-3", name: "Holy Panda (Táctil)", price: 45.99, rating: 4.9, category: "Switches", brand: "Drop", image: Holyp, description: "Switches táteis premium com bump arredondado.", imageSize: "h-40 w-40" },
 
   { id: "kc-1", name: "Keycaps GMK Laser", price: 129.99, rating: 4.9, category: "Keycaps", brand: "GMK", image: gmkLaser, description: "Keycaps ABS double-shot com icônico tema Laser.", imageSize:"h-48 w-48"},
-  { id: "kc-2", name: "Keycaps PBT Botanical", price: 69.99, rating: 4.7, category: "Keycaps", brand: "Infinikey", image: "🌿", description: "Keycaps PBT dye-sub com tema botânico." },
+  { id: "kc-2", name: "Keycaps PBT Botanical", price: 69.99, rating: 4.7, category: "Keycaps", brand: "Infinikey", image: pbtbot, description: "Keycaps PBT dye-sub com tema botânico.", imageSize:"h-48 w-48"},
   { id: "kc-3", name: "Keycaps MT3 Susuwatari", price: 89.99, rating: 4.6, category: "Keycaps", brand: "Drop", image: "⬛", description: "Keycaps esculpidos de perfil alto com estilo retrô." },
 
   { id: "cs-1", name: "Case de Alumínio Tofu65", price: 119.99, rating: 4.7, category: "Cases", brand: "KBDFans", image: tofu65, description: "Case de alumínio CNC para teclados 65%.", imageSize: "h-28 w-38"},
