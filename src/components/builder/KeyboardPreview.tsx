@@ -18,6 +18,12 @@ const keycapColorMap: Record<string, { base: string; accent: string }> = {
   "kc-mx-minimal": { base: "#1a1a1a", accent: "#333333" },
 };
 
+const layoutKeyCount: Record<string, number> = {
+  "60%": 61, "65%": 68, "75%": 84, "TKL": 87, "Full": 104,
+};
+
+
+
 /* ── Key model ────────────────────────────────────────────────
    Each row is a list of keys (label + width in "u" units) or
    spacers (gaps used to separate clusters, like a real board). */
