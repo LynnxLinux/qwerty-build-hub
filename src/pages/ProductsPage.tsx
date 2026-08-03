@@ -5,6 +5,7 @@ import { products, categories, brands } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 
+
 const ProductsPage = () => {
   const { addItem } = useCart();
   const [category, setCategory] = useState("All");
@@ -39,7 +40,14 @@ const ProductsPage = () => {
                 category === c ? "bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-accent"
               }`}
             >
-              {c === "All" ? "Todos" : c}
+              {{
+                All: "Todos",
+                Switches: "Switches",
+                Keycaps: "Keycaps",
+                Cases: "Cases",
+                Cables: "Cabos",
+                Accessories: "Acessórios"
+              }[c] || c}
             </button>
           ))}
         </div>
@@ -89,7 +97,10 @@ const ProductsPage = () => {
 
             <div className="p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
-                {product.category}
+                {{
+                  Cables: "Cabos",
+                  Accessories: "Acessórios",
+                  }[product.category] || product.category}
               </p>
 
               <h3 className="font-semibold text-sm mb-1">{product.name}</h3>
@@ -107,7 +118,10 @@ const ProductsPage = () => {
 
               <div className="flex items-center justify-between">
                 <span className="text-primary font-bold tabular-nums">
-                  ${product.price.toFixed(2)}
+                  {product.price.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                    })}
                 </span>
 
                 <motion.button
