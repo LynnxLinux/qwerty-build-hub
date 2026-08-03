@@ -47,7 +47,6 @@ const alphaShiftRow = (rightShiftW: number): Row => [
 ];
 
 /* F-rows */
-const fRow60Esc: Row = [{ k: "Esc" }];
 const fRowCompact: Row = [
   { k: "Esc" }, { k: "F1" }, { k: "F2" }, { k: "F3" }, { k: "F4" }, { k: "F5" }, { k: "F6" },
   { k: "F7" }, { k: "F8" }, { k: "F9" }, { k: "F10" }, { k: "F11" }, { k: "F12" },
