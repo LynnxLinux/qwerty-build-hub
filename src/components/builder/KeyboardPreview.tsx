@@ -157,9 +157,8 @@ const KeyboardPreview = ({ selectedLayout, selectedCase, selectedKeycap, selecte
 
   const { rows, numpad } = buildLayout(selectedLayout);
 
-  const keyCount =
-    rows.reduce((sum, row) => sum + row.filter((c) => !isGap(c)).length, 0) +
-    (numpad ? numpadLeft.reduce((s, r) => s + r.length, 0) + numpadRight.length : 0);
+  const keyCount = layoutKeyCount[selectedLayout] ?? 68;
+
 
   const renderKey = (key: Key, id: string) => {
     const w = key.w ?? 1;
