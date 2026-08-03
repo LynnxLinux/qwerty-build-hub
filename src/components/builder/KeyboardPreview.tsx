@@ -171,7 +171,7 @@ const KeyboardPreview = ({ selectedLayout, selectedCase, selectedKeycap, selecte
     const h = key.h ?? 1;
     const isAccent = ACCENT_KEYS.has(key.k);
     const bg = isAccent ? keycapAccent : keycapBase;
-    const showLabel = key.k.length <= 4 || w >= 1.5;
+    const showLabel = key.k.length <= 5 || w >= 1.5;
     return (
       <div key={id} style={{ width: `calc(${w} * var(--ku))`, height: `calc(${h} * var(--ku))`, padding: "var(--kgap)" }}>
         <motion.div
