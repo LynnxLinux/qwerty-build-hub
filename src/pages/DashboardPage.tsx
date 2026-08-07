@@ -5,9 +5,10 @@ import { Navigate } from "react-router-dom";
 import { User, ShoppingBag, Keyboard, Settings } from "lucide-react";
 
 const DashboardPage = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { items, totalPrice } = useCart();
 
+  if (isLoading) return <div className="flex items-center justify-center min-h-[60vh]"><p>Carregando...</p></div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   const savedBuilds = [

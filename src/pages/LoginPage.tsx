@@ -37,13 +37,15 @@ const LoginPage = () => {
       return;
     }
 
-    const success = isRegister
+    const authResult = isRegister
       ? await register(form.email, form.password, form.name)
       : await login(form.email, form.password);
 
-    if (success) {
+    if (authResult.success) {
       toast.success(isRegister ? "Account created!" : "Welcome back!");
       navigate("/dashboard");
+    } else {
+      toast.error(authResult.error || "Something went wrong");
     }
   };
 

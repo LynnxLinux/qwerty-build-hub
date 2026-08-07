@@ -78,13 +78,12 @@ const CartPage = () => {
               <span className="tabular-nums">R${totalPrice.toFixed(2)}</span>
             </div>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button"
+          <Link
+            to="/checkout"
+            className="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button text-center block"
           >
             Finalizar compra
-          </motion.button>
+          </Link>
         </div>
       </div>
     </div>
