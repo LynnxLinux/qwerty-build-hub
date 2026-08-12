@@ -152,26 +152,81 @@ export class CartService {
 
   /**
    * Merge anonymous cart items into user's cart.
-   * Each item is validated for stock. Items that pass validation are added;
-   * items with insufficient stock are skipped and reported.
+   * Uses SET semantics (not increment) for idempotency:
+   * - If item exists in user cart and guest cart, final qty = max(user_qty, guest_qty) capped by stock
+   * - If item only in guest cart, it's added with guest qty capped by stock
+   * - Entire operation is transactional — no partial merges
    */
   async mergeCart(userId: string, items: MergeCartItem[]) {
     const skipped: Array<{ variantId: string; reason: string }> = [];
+    const adjusted: Array<{ variantId: string; requested: number; actual: number; reason: string }> = [];
 
-    for (const item of items) {
-      try {
-        await this.addItem(userId, { variantId: item.variantId, quantity: item.quantity });
-      } catch (err) {
-        // If stock insufficient or variant invalid, skip this item
-        if (err instanceof AppError) {
-          skipped.push({ variantId: item.variantId, reason: err.message });
-        } else {
-          skipped.push({ variantId: item.variantId, reason: 'Erro ao adicionar item' });
-        }
+    await prisma.$transaction(async (tx) => {
+      // Find or create user cart
+      let cart = await tx.cart.findFirst({
+        where: { userId, isActive: true },
+        include: { items: true },
+      });
+
+      if (!cart) {
+        cart = await tx.cart.create({
+          data: {
+            userId,
+            isActive: true,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          },
+          include: { items: true },
+        });
       }
-    }
+
+      for (const guestItem of items) {
+        // Validate variant exists and is active
+        const variant = await tx.productVariant.findFirst({
+          where: { id: guestItem.variantId, deletedAt: null, isActive: true },
+          include: { product: true },
+        });
+
+        if (!variant || !variant.product.isActive) {
+          skipped.push({ variantId: guestItem.variantId, reason: 'Produto indisponível' });
+          continue;
+        }
+
+        // Find existing item in user cart
+        const existingItem = cart.items?.find((i) => i.variantId === guestItem.variantId);
+        const existingQty = existingItem?.quantity ?? 0;
+
+        // Desired quantity: max of guest and existing (SET semantics for idempotency)
+        const desiredQty = Math.max(guestItem.quantity, existingQty);
+
+        // Cap by stock
+        const finalQty = Math.min(desiredQty, variant.stockQty, 99);
+
+        if (finalQty <= 0) {
+          skipped.push({ variantId: guestItem.variantId, reason: 'Estoque esgotado' });
+          continue;
+        }
+
+        if (finalQty < desiredQty) {
+          adjusted.push({
+            variantId: guestItem.variantId,
+            requested: desiredQty,
+            actual: finalQty,
+            reason: `Quantidade ajustada: apenas ${variant.stockQty} unidades disponíveis`,
+          });
+        }
+
+        const unitPrice = variant.price ?? variant.product.salePrice ?? variant.product.basePrice;
+
+        // Upsert: SET quantity (not increment) — makes merge idempotent
+        await tx.cartItem.upsert({
+          where: { cartId_variantId: { cartId: cart.id, variantId: guestItem.variantId } },
+          update: { quantity: finalQty, unitPrice: Number(unitPrice) },
+          create: { cartId: cart.id, variantId: guestItem.variantId, quantity: finalQty, unitPrice: Number(unitPrice) },
+        });
+      }
+    });
 
     const cart = await this.getCart(userId);
-    return { cart, skipped };
+    return { cart, skipped, adjusted };
   }
 }

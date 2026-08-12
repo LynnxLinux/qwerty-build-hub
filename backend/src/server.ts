@@ -88,12 +88,17 @@ const startServer = async (): Promise<void> => {
     await connectRedis();
 
     // Start job workers and scheduler (graceful — continues if Redis unavailable)
-    try {
-      const { startWorkers, startScheduler } = await import('./jobs');
-      startWorkers();
-      await startScheduler();
-    } catch (err) {
-      logger.warn('Jobs/workers não iniciados — Redis pode estar indisponível', err);
+    // When DISABLE_WORKERS=true, backend acts as producer only (worker service handles consumption)
+    if (process.env.DISABLE_WORKERS !== 'true') {
+      try {
+        const { startWorkers, startScheduler } = await import('./jobs');
+        startWorkers();
+        await startScheduler();
+      } catch (err) {
+        logger.warn('Jobs/workers não iniciados — Redis pode estar indisponível', err);
+      }
+    } else {
+      logger.info('Workers desabilitados nesta instância (DISABLE_WORKERS=true)');
     }
 
     // Iniciar servidor

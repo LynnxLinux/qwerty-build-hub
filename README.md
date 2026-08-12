@@ -42,7 +42,18 @@ npm run dev
 ```bash
 docker compose up -d
 docker compose --profile migration run --rm migrate
+# Seed (optional — populates categories, products, admin user):
+docker compose exec backend node dist/prisma/seed.js
 ```
+
+### Portas do ambiente local
+
+| Serviço    | Porta externa | Porta interna |
+|------------|--------------|---------------|
+| PostgreSQL | 55432        | 5432          |
+| Redis      | 56379        | 6379          |
+| Backend    | 3000         | 3000          |
+| Frontend   | 8080         | 80            |
 
 ## Testes
 

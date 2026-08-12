@@ -25,6 +25,7 @@ router.post('/refresh', validate(refreshTokenSchema), (req, res, next) => contro
 router.post('/logout', authenticate, (req, res, next) => controller.logout(req, res, next));
 router.post('/change-password', authenticate, validate(changePasswordSchema), (req, res, next) => controller.changePassword(req, res, next));
 router.get('/me', authenticate, (req, res, next) => controller.me(req, res, next));
+router.patch('/me', authenticate, (req, res, next) => controller.updateProfile(req, res, next));
 
 // ==========================================
 // LGPD — Data Export

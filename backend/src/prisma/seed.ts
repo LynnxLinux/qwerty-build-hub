@@ -140,11 +140,11 @@ async function main() {
     // Criar imagem placeholder
     await prisma.image.upsert({
       where: { id: `img-${product.slug}` },
-      update: {},
+      update: { url: '/images/product-placeholder.svg', altText: product.name },
       create: {
         id: `img-${product.slug}`,
         productId: created.id,
-        url: 'https://via.placeholder.com/300',
+        url: '/images/product-placeholder.svg',
         altText: product.name,
         category: 'PRODUCT',
         isPrimary: true,
