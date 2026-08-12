@@ -1,37 +1,79 @@
-O QWERTY é um site que auxilia na montagem de teclados personalizados, permitindo vc escolher quais peças quer
+# Qwerty Build Hub — E-commerce de Teclados Mecânicos
 
+E-commerce full-stack para teclados mecânicos customizáveis.
 
-Este projeto foi desenvolvido com o objetivo de criar uma aplicação moderna, funcional e de fácil utilização, utilizando tecnologias atuais do desenvolvimento web. A aplicação foi construída com foco em organização de código, componentização e boas práticas de desenvolvimento.
+## Stack
 
-Tecnologias Utilizadas:
-React.js
-Vite
-TypeScript
-Tailwind CSS
-Componentes reutilizáveis
-Funcionalidades
-Interface responsiva e intuitiva
-Componentes reutilizáveis para melhor organização
-Sistema estruturado para fácil manutenção e escalabilidade
-Navegação entre páginas
-Estrutura do Projeto
+- **Backend**: Node.js + TypeScript + Express + Prisma + PostgreSQL
+- **Frontend**: React + Vite + TypeScript + Tailwind CSS
+- **Infra**: Redis + BullMQ + Docker + Nginx
+- **Pagamentos**: Mercado Pago (PIX Sandbox)
 
-O projeto segue uma estrutura baseada em componentes, facilitando a reutilização e manutenção do código. Cada funcionalidade é separada em arquivos específicos, promovendo melhor organização.
+## Quick Start
 
-Como Executar o Projeto
-Clone o repositório
+### Pré-requisitos
 
-Instale as dependências:
+- Node.js 20+
+- PostgreSQL 16+
+- Redis 7+
 
+### Backend
+
+```bash
+cd backend
 npm install
-
-Inicie o projeto:
-
+cp .env.example .env  # Configure as variáveis
+npx prisma migrate deploy --schema=src/prisma/schema.prisma
+npx prisma db seed
 npm run dev
+```
 
-Acesse no navegador:
+### Frontend
 
-http://localhost:5173
-Considerações
+```bash
+cd frontend
+npm install
+cp .env.example .env  # Configure VITE_API_URL
+npm run dev
+```
 
-Este projeto foi desenvolvido para fins educacionais e pode ser expandido com novas funcionalidades conforme necessário.
+### Docker Compose
+
+```bash
+docker compose up -d
+docker compose --profile migration run --rm migrate
+```
+
+## Testes
+
+```bash
+# Backend
+cd backend && npm test
+
+# Frontend
+cd frontend && npm test
+```
+
+## Variáveis de Ambiente
+
+Ver `backend/.env.example` e `frontend/.env.example`.
+
+## Documentação
+
+- `docs/OPERATIONS-RUNBOOK.md` — Guia operacional
+- `docs/PHASE-0-STEP-*-REPORT.md` — Relatórios de implementação
+
+## Status
+
+FASE 0 completa (Etapas 1–13):
+- ✅ Auth + RBAC
+- ✅ Produtos + Categorias + Variantes
+- ✅ Carrinho + Estoque transacional
+- ✅ Checkout + Pedidos
+- ✅ Pagamentos (Mercado Pago PIX)
+- ✅ Frete + Tracking
+- ✅ Notificações (BullMQ)
+- ✅ Admin
+- ✅ Segurança + LGPD
+- ✅ 162 testes backend + 15 frontend
+- ✅ Docker + CI/CD + Backup
