@@ -1,10 +1,21 @@
 import request from 'supertest';
 import { app } from '../server';
+import { prisma } from '../config/database';
 
 describe('Community Builds', () => {
   let accessToken: string;
 
   beforeAll(async () => {
+    // The 'holy-panda' switch is seeded deliberately out-of-stock so the
+    // 'seed-build-botanical-garden' build demonstrates partial availability.
+    // Other suites sharing this database can restock it (order cancellation
+    // increments stock), which would make this suite order-dependent. Force the
+    // documented precondition here so the assertions are deterministic in CI.
+    await prisma.productVariant.updateMany({
+      where: { product: { slug: 'holy-panda' } },
+      data: { stockQty: 0 },
+    });
+
     const regRes = await request(app)
       .post('/api/v1/auth/register')
       .send({ name: 'Build Test', email: `build_test_${Date.now()}@test.com`, password: 'BuildPass1' })
