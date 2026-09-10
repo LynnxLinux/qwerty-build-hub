@@ -4,19 +4,56 @@ import { motion } from "framer-motion";
 import { ShoppingCart, ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 import { useProduct } from "@/hooks/useProduct";
 import { useCart } from "@/context/CartContext";
+import { useBuyNow } from "@/hooks/useBuyNow";
 import { ProductGallery } from "@/components/products/ProductGallery";
 import { VariantSelector } from "@/components/products/VariantSelector";
 import { StockBadge } from "@/components/products/StockBadge";
 import { PriceDisplay } from "@/components/products/PriceDisplay";
+import { ProductCard } from "@/components/products/ProductCard";
+import { toProductCardModel } from "@/adapters/productCard";
+import { productsApi } from "@/api/products";
+import { mapApiError } from "@/utils/errorMapper";
 import { toast } from "sonner";
-import type { ProductVariant } from "@/types/product";
+import type { ProductVariant, ProductListItem } from "@/types/product";
 
 const ProductDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const { product, isLoading, error, notFound, refetch } = useProduct(slug);
   const { addItem } = useCart();
+  const { buyNow, isBuying } = useBuyNow();
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [isAdding, setIsAdding] = useState(false);
+  const [related, setRelated] = useState<ProductListItem[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+
+  // Related products — same category, excluding the current product.
+  useEffect(() => {
+    if (!product?.categoryId) {
+      setRelated([]);
+      return;
+    }
+    let cancelled = false;
+    setRelatedLoading(true);
+    productsApi
+      .list({ categoryId: product.categoryId, limit: "5" })
+      .then((res) => {
+        if (cancelled || !res.success || !res.data) return;
+        const items = (res.data as unknown as ProductListItem[])
+          .filter((p) => p.id !== product.id)
+          .slice(0, 4);
+        setRelated(items);
+      })
+      .catch(() => {
+        if (!cancelled) setRelated([]);
+      })
+      .finally(() => {
+        if (!cancelled) setRelatedLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [product?.categoryId, product?.id]);
 
   // Auto-select first variant when product loads
   useEffect(() => {
@@ -71,7 +108,16 @@ const ProductDetailPage = () => {
   const currentStock = selectedVariant?.stockQty ?? 0;
   const canAddToCart = selectedVariant && currentStock > 0;
 
-  const handleAddToCart = () => {
+  const buildCartPayload = () => ({
+    id: selectedVariant!.id,
+    variantId: selectedVariant!.id,
+    name: `${product.name} — ${selectedVariant!.name}`,
+    price: Number(currentPrice),
+    image: product.images[0]?.url || "",
+    quantity,
+  });
+
+  const handleAddToCart = async () => {
     if (!selectedVariant) {
       toast.error("Selecione uma variante");
       return;
@@ -80,16 +126,30 @@ const ProductDetailPage = () => {
       toast.error("Produto esgotado");
       return;
     }
+    if (isAdding || isBuying) return;
 
-    addItem({
-      id: selectedVariant.id,
-      variantId: selectedVariant.id,
-      name: `${product.name} — ${selectedVariant.name}`,
-      price: Number(currentPrice),
-      image: product.images[0]?.url || "",
-      quantity,
-    });
-    toast.success(`${product.name} adicionado ao carrinho`);
+    setIsAdding(true);
+    try {
+      await addItem(buildCartPayload());
+    } catch (err) {
+      toast.error(mapApiError(err).message);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!selectedVariant) {
+      toast.error("Selecione uma variante");
+      return;
+    }
+    if (currentStock <= 0) {
+      toast.error("Produto esgotado");
+      return;
+    }
+    if (isAdding || isBuying) return;
+
+    await buyNow(buildCartPayload());
   };
 
   return (
@@ -166,7 +226,7 @@ const ProductDetailPage = () => {
           )}
 
           {/* Quantity + Add to Cart */}
-          <div className="flex items-center gap-4 pt-2">
+          <div className="flex items-center flex-wrap gap-4 pt-2">
             <div className="flex items-center border border-border rounded-md">
               <button
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -192,15 +252,41 @@ const ProductDetailPage = () => {
               whileHover={canAddToCart ? { scale: 1.02 } : {}}
               whileTap={canAddToCart ? { scale: 0.98 } : {}}
               onClick={handleAddToCart}
-              disabled={!canAddToCart}
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!canAddToCart || isAdding || isBuying}
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-accent text-foreground-strong font-semibold rounded-md border border-border disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ShoppingCart className="h-4 w-4" />
-              {currentStock > 0 ? "Adicionar ao carrinho" : "Esgotado"}
+              {currentStock > 0 ? (isAdding ? "Adicionando..." : "Adicionar ao carrinho") : "Esgotado"}
+            </motion.button>
+
+            <motion.button
+              whileHover={canAddToCart ? { scale: 1.02 } : {}}
+              whileTap={canAddToCart ? { scale: 0.98 } : {}}
+              onClick={handleBuyNow}
+              disabled={!canAddToCart || isAdding || isBuying}
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary text-primary-foreground font-semibold rounded-md shadow-button disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {currentStock > 0 ? (isBuying ? "Processando..." : "Comprar agora") : "Esgotado"}
             </motion.button>
           </div>
         </div>
       </motion.div>
+
+      {/* Related products */}
+      {relatedLoading ? (
+        <div className="mt-16 flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : related.length > 0 ? (
+        <section className="mt-16">
+          <h2 className="text-2xl font-bold tracking-tight mb-6">Produtos relacionados</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {related.map((r) => (
+              <ProductCard key={r.id} product={toProductCardModel(r)} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 };

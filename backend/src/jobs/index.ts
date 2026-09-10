@@ -27,8 +27,10 @@ export interface NotificationJobData {
 let connection: IORedis | null = null;
 let notificationQueue: Queue<NotificationJobData> | null = null;
 let cartCleanupQueue: Queue | null = null;
+let paymentReconciliationQueue: Queue | null = null;
 let notificationWorker: Worker | null = null;
 let cartCleanupWorker: Worker | null = null;
+let paymentReconciliationWorker: Worker | null = null;
 let initialized = false;
 
 function getConnection(): IORedis {
@@ -136,6 +138,23 @@ export function startWorkers(): void {
     logger.info('[JOB_COMPLETED]', { jobId: job.id, queue: 'cart-cleanup', deactivated: result.count });
   }, { connection: conn, concurrency: 1 });
 
+  // Payment reconciliation worker — recovers PENDING payments stuck in an
+  // intermediate state (provider timeout, missed webhook) by re-querying
+  // Mercado Pago directly. Never called for FakePaymentProvider/Sandbox in
+  // tests, only relevant once a real provider is configured.
+  paymentReconciliationQueue = new Queue('payment-reconciliation', {
+    connection: conn,
+    defaultJobOptions: { attempts: 2, removeOnComplete: { count: 20 }, removeOnFail: { count: 50 } },
+  });
+
+  paymentReconciliationWorker = new Worker('payment-reconciliation', async (job: Job) => {
+    logger.info('[JOB_STARTED]', { jobId: job.id, queue: 'payment-reconciliation', jobType: 'reconcile' });
+    // Lazy import — avoids a top-level cycle with services that lazily require('../jobs').
+    const { PaymentService } = require('../services/payment.service');
+    const result = await new PaymentService().reconcilePendingPayments();
+    logger.info('[JOB_COMPLETED]', { jobId: job.id, queue: 'payment-reconciliation', ...result });
+  }, { connection: conn, concurrency: 1 });
+
   logger.info('[WORKERS] Started');
 }
 
@@ -156,6 +175,19 @@ export async function startScheduler(): Promise<void> {
     { name: 'cleanup-expired-carts' },
   );
   logger.info('[SCHEDULER] Cart cleanup every 30 min');
+
+  if (!paymentReconciliationQueue) {
+    paymentReconciliationQueue = new Queue('payment-reconciliation', {
+      connection: getConnection(),
+      defaultJobOptions: { attempts: 2, removeOnComplete: { count: 20 } },
+    });
+  }
+  await paymentReconciliationQueue.upsertJobScheduler(
+    'payment-reconciliation-scheduler',
+    { every: 5 * 60 * 1000 },
+    { name: 'reconcile-pending-payments' },
+  );
+  logger.info('[SCHEDULER] Payment reconciliation every 5 min');
 }
 
 // ==========================================
@@ -186,12 +218,15 @@ export async function shutdownJobs(): Promise<void> {
   logger.info('[SHUTDOWN] Closing jobs...');
   if (notificationWorker) await notificationWorker.close();
   if (cartCleanupWorker) await cartCleanupWorker.close();
+  if (paymentReconciliationWorker) await paymentReconciliationWorker.close();
   if (notificationQueue) await notificationQueue.close();
   if (cartCleanupQueue) await cartCleanupQueue.close();
+  if (paymentReconciliationQueue) await paymentReconciliationQueue.close();
   if (connection) await connection.quit();
   connection = null;
   notificationQueue = null;
   cartCleanupQueue = null;
+  paymentReconciliationQueue = null;
   initialized = false;
   logger.info('[SHUTDOWN] Jobs closed');
 }

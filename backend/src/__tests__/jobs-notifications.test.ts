@@ -70,12 +70,16 @@ describe('F8: Enqueue Notification', () => {
   it('enqueueNotification creates notification with eventId', async () => {
     await enqueueNotification({ eventType: 'welcome', entityId: testUser.id, userId: testUser.id });
 
-    // Give worker time to process
-    await new Promise((r) => setTimeout(r, 1500));
+    // The BullMQ worker processes asynchronously. Poll for the delivery instead of a
+    // single fixed sleep so the assertion stays strong but is not racy under load.
+    let delivery = null;
+    for (let attempt = 0; attempt < 20 && !delivery; attempt++) {
+      await new Promise((r) => setTimeout(r, 300));
+      delivery = await prisma.notificationDelivery.findUnique({
+        where: { eventId: `welcome:${testUser.id}` },
+      });
+    }
 
-    const delivery = await prisma.notificationDelivery.findUnique({
-      where: { eventId: `welcome:${testUser.id}` },
-    });
     expect(delivery).not.toBeNull();
     expect(delivery!.type).toBe('welcome');
     expect(delivery!.entityId).toBe(testUser.id);

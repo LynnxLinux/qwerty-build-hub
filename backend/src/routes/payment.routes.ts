@@ -34,11 +34,17 @@ router.get('/:orderId', authenticate, async (req: Request, res: Response, next: 
 // Webhook (public - validated by signature/server-side verification)
 router.post('/webhook', webhookRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await paymentService.handleWebhook(req.body, {
-      xSignature: req.headers['x-signature'] as string | undefined,
-      xRequestId: req.headers['x-request-id'] as string | undefined,
-      rawSignature: req.headers['x-webhook-signature'] as string | undefined,
-    });
+    const result = await paymentService.handleWebhook(
+      req.body,
+      {
+        xSignature: req.headers['x-signature'] as string | undefined,
+        xRequestId: req.headers['x-request-id'] as string | undefined,
+        rawSignature: req.headers['x-webhook-signature'] as string | undefined,
+      },
+      // Mercado Pago calls this endpoint as POST /webhook?data.id=...&type=...
+      // — the signature manifest's data.id must come from here, not the body.
+      { dataId: req.query['data.id'] as string | undefined },
+    );
     sendSuccess(res, result);
   } catch (error) {
     next(error);

@@ -15,6 +15,7 @@ const controller = new ProductController();
 
 // Public
 router.get('/', validate(productQuerySchema, 'query'), (req, res, next) => controller.list(req, res, next));
+router.get('/best-sellers', (req, res, next) => controller.bestSellers(req, res, next));
 router.get('/slug/:slug', (req, res, next) => controller.getBySlug(req, res, next));
 router.get('/:id', (req, res, next) => controller.getById(req, res, next));
 

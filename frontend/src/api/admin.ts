@@ -42,6 +42,23 @@ export const adminApi = {
   getOrder(id: string): Promise<ApiResponse<unknown>> {
     return apiClient.get(`/admin/orders/${id}`);
   },
+  updateOrderStatus(id: string, status: string, cancelReason?: string): Promise<ApiResponse<unknown>> {
+    return apiClient.patch(`/admin/orders/${id}/status`, { status, ...(cancelReason ? { cancelReason } : {}) });
+  },
+
+  // Products (reuses existing /products CRUD — admin-guarded on the backend)
+  getProducts(params?: Record<string, string>): Promise<ApiResponse<unknown[]>> {
+    return apiClient.get('/products', params);
+  },
+  createProduct(data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+    return apiClient.post('/products', data);
+  },
+  updateProduct(id: string, data: Record<string, unknown>): Promise<ApiResponse<unknown>> {
+    return apiClient.patch(`/products/${id}`, data);
+  },
+  deleteProduct(id: string): Promise<ApiResponse<unknown>> {
+    return apiClient.delete(`/products/${id}`);
+  },
 
   // Payments
   getPayments(params?: Record<string, string>): Promise<ApiResponse<unknown[]>> {
