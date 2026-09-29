@@ -61,6 +61,32 @@ export class ProductService {
     return product;
   }
 
+  /**
+   * Real best-sellers, ranked by total quantity sold (OrderItem aggregation).
+   * Excludes cancelled/refunded orders. Returns an empty array — never fabricated
+   * data — when there isn't enough real sales history yet.
+   */
+  async getBestSellers(limit: number): Promise<Awaited<ReturnType<ProductRepository['findManyByIdsOrdered']>>> {
+    const cacheKey = `products:best-sellers:${limit}`;
+    const cached = await cacheGet<Awaited<ReturnType<ProductRepository['findManyByIdsOrdered']>>>(cacheKey);
+    if (cached) return cached;
+
+    const ranked = await prisma.orderItem.groupBy({
+      by: ['productId'],
+      where: {
+        order: { status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+      },
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: 'desc' } },
+      take: limit,
+    });
+
+    const products = await this.productRepo.findManyByIdsOrdered(ranked.map((r) => r.productId));
+
+    await cacheSet(cacheKey, products, CACHE_TTL);
+    return products;
+  }
+
   async getProductById(id: string) {
     const product = await this.productRepo.findById(id);
     if (!product) throw AppError.notFound('Produto não encontrado');

@@ -141,17 +141,19 @@ describe('F9: Inventory', () => {
   });
 
   it('PATCH /admin/inventory/:id → updates stock', async () => {
-    const variant = await prisma.productVariant.findFirst({ where: { isActive: true, deletedAt: null } });
+    const variant = await prisma.productVariant.findFirst({ where: { isActive: true, deletedAt: null }, orderBy: { sku: 'asc' } });
+    const originalStock = variant!.stockQty;
     const res = await request(app).patch(`/api/v1/admin/inventory/${variant!.id}`).set('Authorization', `Bearer ${adminToken}`)
       .send({ stockQty: 99 });
     expect(res.status).toBe(200);
     expect(res.body.data.stockQty).toBe(99);
-    // Restore
-    await prisma.productVariant.update({ where: { id: variant!.id }, data: { stockQty: 10 } });
+    // Restore to the real seeded value (not a hardcoded constant) so this suite
+    // does not corrupt shared stock other suites rely on.
+    await prisma.productVariant.update({ where: { id: variant!.id }, data: { stockQty: originalStock } });
   });
 
   it('PATCH negative stock → 400', async () => {
-    const variant = await prisma.productVariant.findFirst({ where: { isActive: true, deletedAt: null } });
+    const variant = await prisma.productVariant.findFirst({ where: { isActive: true, deletedAt: null }, orderBy: { sku: 'asc' } });
     const res = await request(app).patch(`/api/v1/admin/inventory/${variant!.id}`).set('Authorization', `Bearer ${adminToken}`)
       .send({ stockQty: -5 });
     expect(res.status).toBe(400);

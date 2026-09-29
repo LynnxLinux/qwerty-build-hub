@@ -10,6 +10,8 @@ import uploadRoutes from './upload.routes';
 import passwordRoutes from './password.routes';
 import addressRoutes from './address.routes';
 import shippingRoutes from './shipping.routes';
+import communityBuildRoutes from './communityBuild.routes';
+import builderRoutes from './builder.routes';
 
 export const router = Router();
 
@@ -25,3 +27,5 @@ router.use('/admin', adminRoutes);
 router.use('/uploads', uploadRoutes);
 router.use('/addresses', addressRoutes);
 router.use('/shipping', shippingRoutes);
+router.use('/community-builds', communityBuildRoutes);
+router.use('/builder', builderRoutes);

@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '../config/database';
 import { OrderRepository } from '../repositories/order.repository';
@@ -159,6 +160,10 @@ export class OrderService {
               status: PaymentStatus.PENDING,
               amount: total,
               currency: 'BRL',
+              // Generated once, here, at the same moment the Payment row itself
+              // is created — PaymentService.createPayment() reuses this same
+              // key for every retry of the first payment attempt on this order.
+              idempotencyKey: crypto.randomUUID(),
             },
           },
           shipment: {
@@ -169,6 +174,16 @@ export class OrderService {
               serviceName: shippingServiceName,
               serviceCode: shippingServiceCode,
               shippingCost,
+              // Frozen at creation time — the live Address can be edited or
+              // deleted later without rewriting what this order actually shipped to.
+              snapshotRecipientName: address.recipientName,
+              snapshotStreet: address.street,
+              snapshotNumber: address.number,
+              snapshotComplement: address.complement,
+              snapshotNeighborhood: address.neighborhood,
+              snapshotCity: address.city,
+              snapshotState: address.state,
+              snapshotZipCode: address.zipCode,
             },
           },
         },

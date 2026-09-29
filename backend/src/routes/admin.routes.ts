@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { authenticate, isAdmin, isSuperAdmin } from '../middlewares/auth.middleware';
 import { AdminService } from '../services/admin.service';
+import { OrderService } from '../services/order.service';
+import { OrderRepository } from '../repositories/order.repository';
 import { sendSuccess, sendCreated, sendNoContent } from '../utils/response';
 import { Request, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types';
@@ -9,10 +11,13 @@ import { AppError } from '../utils/AppError';
 import { generateSlug } from '../utils/slug';
 import { z } from 'zod';
 import { validate } from '../middlewares/validate';
+import { updateOrderStatusSchema, orderQuerySchema } from '../validators/order.validator';
 import { parsePagination, buildPaginatedResult } from '../utils/pagination';
 
 const router = Router();
 const adminService = new AdminService();
+const orderService = new OrderService();
+const orderRepo = new OrderRepository();
 
 // All admin routes require auth + admin role
 router.use(authenticate);
@@ -26,6 +31,45 @@ router.get('/dashboard', async (_req: Request, res: Response, next: NextFunction
   try {
     const stats = await adminService.getDashboardStats();
     sendSuccess(res, stats);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==========================================
+// ORDERS (admin — full visibility, any owner)
+// ==========================================
+
+// List all orders (paginated, filterable by status/date). Reuses the same
+// service the customer's /orders (isAdmin) route uses, but under /admin/orders
+// so the admin UI has a dedicated, clearly-scoped endpoint.
+router.get('/orders', validate(orderQuerySchema, 'query'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await orderService.listAllOrders(req.query as never);
+    sendSuccess(res, result.data, 'Pedidos listados', 200, result.meta as unknown as Record<string, unknown>);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Full detail of ANY order (admin bypasses ownership). The customer route
+// GET /orders/:id remains owner-only — this endpoint does NOT relax that.
+router.get('/orders/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const order = await orderRepo.findById(req.params.id);
+    if (!order) throw AppError.notFound('Pedido não encontrado');
+    sendSuccess(res, order);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Change order status (respects the backend state machine in OrderService.updateStatus).
+router.patch('/orders/:id/status', validate(updateOrderStatusSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const admin = (req as AuthenticatedRequest).user;
+    const order = await orderService.updateStatus(req.params.id, req.body, admin.id);
+    sendSuccess(res, order, 'Status atualizado');
   } catch (error) {
     next(error);
   }

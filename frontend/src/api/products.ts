@@ -39,6 +39,7 @@ export interface ProductListParams {
   maxPrice?: string;
   sortBy?: string;
   sortOrder?: string;
+  isFeatured?: string;
 }
 
 export const productsApi = {
@@ -52,5 +53,10 @@ export const productsApi = {
 
   getById(id: string): Promise<ApiResponse<Product>> {
     return apiClient.get(`/products/${id}`);
+  },
+
+  /** Real sales-ranked best sellers (OrderItem aggregation) — empty when there's no sales history yet. */
+  bestSellers(limit?: number): Promise<ApiResponse<Product[]>> {
+    return apiClient.get('/products/best-sellers', limit ? { limit: String(limit) } : undefined);
   },
 };

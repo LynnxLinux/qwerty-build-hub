@@ -17,7 +17,11 @@ export interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity" | "id"> & { id?: string; quantity?: number }) => void;
+  /** Resolves to true when the item was actually added (server-confirmed for authenticated users), false otherwise. */
+  addItem: (
+    item: Omit<CartItem, "quantity" | "id"> & { id?: string; quantity?: number },
+    opts?: { silent?: boolean },
+  ) => Promise<boolean>;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -196,50 +200,57 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [isAuthenticated, loadAuthenticatedCart]);
 
   const addItem = useCallback(
-    (item: Omit<CartItem, "quantity" | "id"> & { id?: string; quantity?: number }) => {
+    (
+      item: Omit<CartItem, "quantity" | "id"> & { id?: string; quantity?: number },
+      opts?: { silent?: boolean },
+    ): Promise<boolean> => {
       const quantity = item.quantity || 1;
 
       if (isAuthenticated) {
         setIsLoading(true);
-        cartApi
+        return cartApi
           .addItem(item.variantId, quantity)
           .then((response) => {
             if (response.success && response.data) {
               setItems(mapApiCartToItems(response.data));
-              toast.success("Item adicionado ao carrinho");
+              if (!opts?.silent) toast.success("Item adicionado ao carrinho");
+              return true;
             }
+            return false;
           })
           .catch((err) => {
             const mapped = mapApiError(err);
-            toast.error(mapped.message);
+            if (!opts?.silent) toast.error(mapped.message);
+            return false;
           })
           .finally(() => setIsLoading(false));
-      } else {
-        setItems((prev) => {
-          const existing = prev.find((i) => i.variantId === item.variantId);
-          let updated: CartItem[];
-          if (existing) {
-            updated = prev.map((i) =>
-              i.variantId === item.variantId
-                ? { ...i, quantity: i.quantity + quantity }
-                : i,
-            );
-          } else {
-            const newItem: CartItem = {
-              id: `anon-${item.variantId}`,
-              variantId: item.variantId,
-              name: item.name,
-              price: item.price,
-              quantity,
-              image: item.image || PRODUCT_PLACEHOLDER,
-            };
-            updated = [...prev, newItem];
-          }
-          saveAnonCart(updated);
-          return updated;
-        });
-        toast.success("Item adicionado ao carrinho");
       }
+
+      setItems((prev) => {
+        const existing = prev.find((i) => i.variantId === item.variantId);
+        let updated: CartItem[];
+        if (existing) {
+          updated = prev.map((i) =>
+            i.variantId === item.variantId
+              ? { ...i, quantity: i.quantity + quantity }
+              : i,
+          );
+        } else {
+          const newItem: CartItem = {
+            id: `anon-${item.variantId}`,
+            variantId: item.variantId,
+            name: item.name,
+            price: item.price,
+            quantity,
+            image: item.image || PRODUCT_PLACEHOLDER,
+          };
+          updated = [...prev, newItem];
+        }
+        saveAnonCart(updated);
+        return updated;
+      });
+      if (!opts?.silent) toast.success("Item adicionado ao carrinho");
+      return Promise.resolve(true);
     },
     [isAuthenticated],
   );

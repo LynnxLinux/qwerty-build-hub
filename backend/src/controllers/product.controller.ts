@@ -15,6 +15,16 @@ export class ProductController {
     }
   }
 
+  async bestSellers(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const limit = Math.min(20, Math.max(1, parseInt(String(req.query.limit ?? '8'), 10) || 8));
+      const products = await productService.getBestSellers(limit);
+      sendSuccess(res, products, 'Mais vendidos listados');
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getBySlug(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const product = await productService.getProductBySlug(req.params.slug);

@@ -1,26 +1,19 @@
 import { motion } from "framer-motion";
-import type { BuilderProduct, LayoutSize } from "@/data/builderProducts";
+import { keyCountForLayout, layoutLabel } from "@/utils/builderLayout";
 
-interface KeyboardPreviewProps {
-  selectedLayout: LayoutSize;
-  selectedCase: BuilderProduct | null;
-  selectedKeycap: BuilderProduct | null;
-  selectedSwitch: BuilderProduct | null;
-  selectedPcb: BuilderProduct | null;
-  caseColor: string; // hex
+export interface PreviewItem {
+  productId: string;
+  name: string;
 }
 
-const keycapColorMap: Record<string, { base: string; accent: string }> = {
-  "kc-mx-laser": { base: "#2d1b69", accent: "#e94560" },
-  "kc-mx-botanical": { base: "#2d4a3e", accent: "#8fb996" },
-  "kc-mx-retro": { base: "#1a1a2e", accent: "#4a4a4a" },
-  "kc-lp-white": { base: "#e8e8e8", accent: "#ffffff" },
-  "kc-mx-minimal": { base: "#1a1a1a", accent: "#333333" },
-};
-
-const layoutKeyCount: Record<string, number> = {
-  "60%": 61, "65%": 68, "75%": 84, "TKL": 87, "Full": 104,
-};
+interface KeyboardPreviewProps {
+  selectedLayout: string;
+  selectedCase: PreviewItem | null;
+  selectedKeycap: PreviewItem | null;
+  selectedSwitch: PreviewItem | null;
+  selectedPcb: PreviewItem | null;
+  caseColor: string; // hex
+}
 
 
 
@@ -65,10 +58,10 @@ const fRowTkl: Row = [
 ];
 
 /* ── Layouts ──────────────────────────────────────────────── */
-function buildLayout(layout: LayoutSize): { rows: Row[]; numpad: boolean } {
+function buildLayout(layout: string): { rows: Row[]; numpad: boolean } {
   switch (layout) {
     /* 60% — 61 teclas, sem F-row, sem navegação, sem setas */
-    case "60%":
+    case "60":
       return {
         numpad: false,
         rows: [
@@ -85,7 +78,7 @@ function buildLayout(layout: LayoutSize): { rows: Row[]; numpad: boolean } {
       };
 
     /* 65% — 68 teclas: 60% + coluna de navegação + setas */
-    case "65%":
+    case "65":
       return {
         numpad: false,
         rows: [
@@ -103,7 +96,7 @@ function buildLayout(layout: LayoutSize): { rows: Row[]; numpad: boolean } {
       };
 
     /* 75% — F-row compacta + coluna lateral de navegação */
-    case "75%":
+    case "75":
       return {
         numpad: false,
         rows: [
@@ -121,11 +114,11 @@ function buildLayout(layout: LayoutSize): { rows: Row[]; numpad: boolean } {
         ],
       };
 
-    /* TKL — 87 teclas com clusters separados */
-    case "TKL":
-    case "Full":
+    /* TKL / Full — 87+ teclas com clusters separados */
+    case "tkl":
+    case "full":
       return {
-        numpad: layout === "Full",
+        numpad: layout === "full",
         rows: [
           [...fRowTkl, { gap: 0.5 }, { k: "PrtSc" }, { k: "Scr" }, { k: "Pse" }],
           [...numRow, { gap: 0.5 }, { k: "Ins" }, { k: "Home" }, { k: "PgUp" }],
@@ -140,6 +133,10 @@ function buildLayout(layout: LayoutSize): { rows: Row[]; numpad: boolean } {
           ],
         ],
       };
+
+    default:
+      // Unknown/unselected layout — render a sane 65% default so the preview never crashes.
+      return buildLayout("65");
   }
 }
 
@@ -156,14 +153,15 @@ const numpadRight: Key[] = [{ k: "-" }, { k: "+", h: 2 }, { k: "↵", h: 2 }];
 const ACCENT_KEYS = new Set(["Esc", "Enter", "Space", "↵"]);
 
 const KeyboardPreview = ({ selectedLayout, selectedCase, selectedKeycap, selectedSwitch, selectedPcb, caseColor }: KeyboardPreviewProps) => {
-  const kcColors = selectedKeycap ? keycapColorMap[selectedKeycap.id] : null;
-  const keycapBase = kcColors?.base ?? "#3a3a4a";
-  const keycapAccent = kcColors?.accent ?? "#555";
-  const isDarkLegend = selectedKeycap?.id === "kc-lp-white";
+  // Keycap set colors aren't part of the real catalog's compatibility metadata —
+  // a neutral default is used instead of guessing from the product name/id.
+  const keycapBase = "#3a3a4a";
+  const keycapAccent = "#555";
+  const isDarkLegend = false;
 
-  const { rows, numpad } = buildLayout(selectedLayout);
+  const { rows, numpad } = buildLayout(selectedLayout || "65");
 
-  const keyCount = layoutKeyCount[selectedLayout] ?? 68;
+  const keyCount = keyCountForLayout(selectedLayout) ?? 68;
 
 
   const renderKey = (key: Key, id: string) => {
@@ -196,7 +194,7 @@ const KeyboardPreview = ({ selectedLayout, selectedCase, selectedKeycap, selecte
       {/* Layout label */}
       <div className="flex items-center gap-3">
         <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Layout</span>
-        <span className="text-sm font-bold" style={{ color: "hsl(var(--foreground-strong))" }}>{selectedLayout}</span>
+        <span className="text-sm font-bold" style={{ color: "hsl(var(--foreground-strong))" }}>{selectedLayout ? layoutLabel(selectedLayout) : "—"}</span>
         <span className="text-xs text-muted-foreground">({keyCount} teclas)</span>
       </div>
 
@@ -208,11 +206,11 @@ const KeyboardPreview = ({ selectedLayout, selectedCase, selectedKeycap, selecte
         style={{
           // responsive key unit: shrinks on smaller screens / bigger layouts
           ["--ku" as string]:
-            selectedLayout === "Full"
+            selectedLayout === "full"
               ? "clamp(0.75rem, 1.5vw, 1.5rem)"
-              : selectedLayout === "TKL"
+              : selectedLayout === "tkl"
                 ? "clamp(0.85rem, 1.9vw, 1.75rem)"
-                : selectedLayout === "75%"
+                : selectedLayout === "75"
                   ? "clamp(1rem, 2.4vw, 2rem)"
                   : "clamp(1.1rem, 2.8vw, 2.2rem)",
           ["--kgap" as string]: "calc(var(--ku) * 0.05)",

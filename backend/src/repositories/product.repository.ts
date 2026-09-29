@@ -121,4 +121,26 @@ export class ProductRepository {
   async countAll(): Promise<number> {
     return prisma.product.count({ where: { deletedAt: null } });
   }
+
+  /** Fetches card-shaped product data for a set of ids, preserving the given order (e.g. rank order). */
+  async findManyByIdsOrdered(ids: string[]) {
+    if (ids.length === 0) return [];
+
+    const products = await prisma.product.findMany({
+      where: { id: { in: ids }, deletedAt: null, isActive: true },
+      include: {
+        category: { select: { id: true, name: true, slug: true } },
+        images: { where: { isPrimary: true }, take: 1 },
+        variants: {
+          where: { deletedAt: null, isActive: true },
+          take: 1,
+          select: { id: true, name: true, sku: true, price: true, stockQty: true },
+        },
+        _count: { select: { variants: true } },
+      },
+    });
+
+    const byId = new Map(products.map((p) => [p.id, p]));
+    return ids.map((id) => byId.get(id)).filter((p): p is (typeof products)[number] => Boolean(p));
+  }
 }
